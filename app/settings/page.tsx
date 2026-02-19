@@ -26,8 +26,16 @@ const settingsSchema = z.object({
     bod_secretary: z.string().min(1, "Required"),
     bod_member_1: z.string().min(1, "Required"),
     bod_member_2: z.string().min(1, "Required"),
+    bod_member_3: z.string().optional(),
     general_manager: z.string().min(1, "Required"),
     signature_url: z.string().optional(),
+    bod_chairman_sig: z.string().optional(),
+    bod_vice_chairman_sig: z.string().optional(),
+    bod_secretary_sig: z.string().optional(),
+    bod_member_1_sig: z.string().optional(),
+    bod_member_2_sig: z.string().optional(),
+    bod_member_3_sig: z.string().optional(),
+    general_manager_sig: z.string().optional(),
 })
 
 type SettingsValues = z.infer<typeof settingsSchema>
@@ -51,8 +59,16 @@ export default function SettingsPage() {
             bod_secretary: "",
             bod_member_1: "",
             bod_member_2: "",
+            bod_member_3: "",
             general_manager: "",
             signature_url: "",
+            bod_chairman_sig: "",
+            bod_vice_chairman_sig: "",
+            bod_secretary_sig: "",
+            bod_member_1_sig: "",
+            bod_member_2_sig: "",
+            bod_member_3_sig: "",
+            general_manager_sig: "",
         },
     })
 
@@ -95,8 +111,16 @@ export default function SettingsPage() {
                         bod_secretary: profile.bod_secretary || "",
                         bod_member_1: profile.bod_member_1 || "",
                         bod_member_2: profile.bod_member_2 || "",
+                        bod_member_3: profile.bod_member_3 || "",
                         general_manager: profile.general_manager || "",
                         signature_url: profile.signature_url || "",
+                        bod_chairman_sig: profile.bod_chairman_sig || "",
+                        bod_vice_chairman_sig: profile.bod_vice_chairman_sig || "",
+                        bod_secretary_sig: profile.bod_secretary_sig || "",
+                        bod_member_1_sig: profile.bod_member_1_sig || "",
+                        bod_member_2_sig: profile.bod_member_2_sig || "",
+                        bod_member_3_sig: profile.bod_member_3_sig || "",
+                        general_manager_sig: profile.general_manager_sig || "",
                     })
                 }
             } catch (error: any) {
@@ -148,13 +172,13 @@ export default function SettingsPage() {
         }
     }
 
-    async function onUploadSignature(event: React.ChangeEvent<HTMLInputElement>) {
+    async function onUploadSignature(event: React.ChangeEvent<HTMLInputElement>, fieldName: keyof SettingsValues) {
         if (!event.target.files || event.target.files.length === 0) return
         if (!user) return
 
         const file = event.target.files[0]
         const fileExt = file.name.split('.').pop()
-        const fileName = `${user.id}-sig-${Math.random()}.${fileExt}`
+        const fileName = `${user.id}-${fieldName}-${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
 
         setSaving(true)
@@ -169,7 +193,7 @@ export default function SettingsPage() {
                 .from('logos')
                 .getPublicUrl(filePath)
 
-            form.setValue("signature_url", publicUrl, { shouldDirty: true })
+            form.setValue(fieldName, publicUrl, { shouldDirty: true })
             toast.success("Signature uploaded successfully. Don't forget to save changes!")
         } catch (error: any) {
             console.error("Error uploading signature:", error)
@@ -307,41 +331,93 @@ export default function SettingsPage() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="bod_chairman">BOD Chairman</Label>
+                            <div className="space-y-4">
+                                <Label>BOD Chairman</Label>
+                                <div className="flex items-center gap-4">
                                     <Input
                                         id="bod_chairman"
                                         {...form.register("bod_chairman")}
                                         placeholder="Full Name"
                                     />
-                                    {form.formState.errors.bod_chairman && (
-                                        <p className="text-sm text-destructive">{form.formState.errors.bod_chairman.message}</p>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {form.watch("bod_chairman_sig") && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img
+                                                src={form.watch("bod_chairman_sig")}
+                                                alt="Sig"
+                                                className="h-10 w-10 object-contain border rounded bg-white"
+                                            />
+                                        )}
+                                        <div className="relative">
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => onUploadSignature(e, "bod_chairman_sig")}
+                                                className="w-24 text-xs"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+                                {form.formState.errors.bod_chairman && (
+                                    <p className="text-sm text-destructive">{form.formState.errors.bod_chairman.message}</p>
+                                )}
+                            </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="bod_vice_chairman">BOD Vice-Chairman</Label>
+                            <Separator />
+
+                            <div className="space-y-4">
+                                <Label>BOD Vice-Chairman</Label>
+                                <div className="flex items-center gap-4">
                                     <Input
                                         id="bod_vice_chairman"
                                         {...form.register("bod_vice_chairman")}
                                         placeholder="Full Name"
                                     />
-                                    {form.formState.errors.bod_vice_chairman && (
-                                        <p className="text-sm text-destructive">{form.formState.errors.bod_vice_chairman.message}</p>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {form.watch("bod_vice_chairman_sig") && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img
+                                                src={form.watch("bod_vice_chairman_sig")}
+                                                alt="Sig"
+                                                className="h-10 w-10 object-contain border rounded bg-white"
+                                            />
+                                        )}
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => onUploadSignature(e, "bod_vice_chairman_sig")}
+                                            className="w-24 text-xs"
+                                        />
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="bod_secretary">BOD Secretary</Label>
+                            <Separator />
+
+                            <div className="space-y-4">
+                                <Label>BOD Secretary</Label>
+                                <div className="flex items-center gap-4">
                                     <Input
                                         id="bod_secretary"
                                         {...form.register("bod_secretary")}
                                         placeholder="Full Name"
                                     />
-                                    {form.formState.errors.bod_secretary && (
-                                        <p className="text-sm text-destructive">{form.formState.errors.bod_secretary.message}</p>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {form.watch("bod_secretary_sig") && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img
+                                                src={form.watch("bod_secretary_sig")}
+                                                alt="Sig"
+                                                className="h-10 w-10 object-contain border rounded bg-white"
+                                            />
+                                        )}
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => onUploadSignature(e, "bod_secretary_sig")}
+                                            className="w-24 text-xs"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -349,67 +425,89 @@ export default function SettingsPage() {
 
                             <div className="space-y-4">
                                 <h4 className="text-sm font-medium">Board Members</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="bod_member_1">Member 1</Label>
+
+                                <div className="space-y-2">
+                                    <Label>Member 1</Label>
+                                    <div className="flex items-center gap-4">
                                         <Input
                                             id="bod_member_1"
                                             {...form.register("bod_member_1")}
                                             placeholder="Full Name"
                                         />
-                                        {form.formState.errors.bod_member_1 && (
-                                            <p className="text-sm text-destructive">{form.formState.errors.bod_member_1.message}</p>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {form.watch("bod_member_1_sig") && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={form.watch("bod_member_1_sig")}
+                                                    alt="Sig"
+                                                    className="h-10 w-10 object-contain border rounded bg-white"
+                                                />
+                                            )}
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => onUploadSignature(e, "bod_member_1_sig")}
+                                                className="w-24 text-xs"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="bod_member_2">Member 2</Label>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Member 2</Label>
+                                    <div className="flex items-center gap-4">
                                         <Input
                                             id="bod_member_2"
                                             {...form.register("bod_member_2")}
                                             placeholder="Full Name"
                                         />
-                                        {form.formState.errors.bod_member_2 && (
-                                            <p className="text-sm text-destructive">{form.formState.errors.bod_member_2.message}</p>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {form.watch("bod_member_2_sig") && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={form.watch("bod_member_2_sig")}
+                                                    alt="Sig"
+                                                    className="h-10 w-10 object-contain border rounded bg-white"
+                                                />
+                                            )}
+                                            <Input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => onUploadSignature(e, "bod_member_2_sig")}
+                                                className="w-24 text-xs"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <Separator />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="general_manager">General Manager</Label>
-                                <Input
-                                    id="general_manager"
-                                    {...form.register("general_manager")}
-                                    placeholder="Full Name"
-                                />
-                                {form.formState.errors.general_manager && (
-                                    <p className="text-sm text-destructive">{form.formState.errors.general_manager.message}</p>
-                                )}
-                            </div>
-
-                            <Separator />
-
                             <div className="space-y-4">
-                                <Label>My E-Signature</Label>
+                                <Label>General Manager</Label>
                                 <div className="flex items-center gap-4">
-                                    {form.watch("signature_url") && (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img
-                                            src={form.watch("signature_url")}
-                                            alt="Signature Preview"
-                                            className="h-20 object-contain border rounded-md p-1 bg-white"
-                                        />
-                                    )}
                                     <Input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={onUploadSignature}
-                                        className="max-w-xs"
+                                        id="general_manager"
+                                        {...form.register("general_manager")}
+                                        placeholder="Full Name"
                                     />
+                                    <div className="flex items-center gap-2">
+                                        {form.watch("general_manager_sig") && (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img
+                                                src={form.watch("general_manager_sig")}
+                                                alt="Sig"
+                                                className="h-10 w-10 object-contain border rounded bg-white"
+                                            />
+                                        )}
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => onUploadSignature(e, "general_manager_sig")}
+                                            className="w-24 text-xs"
+                                        />
+                                    </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground">Upload your transparent PNG signature. This will be used to certify resolutions.</p>
                             </div>
                         </CardContent>
                     </Card>

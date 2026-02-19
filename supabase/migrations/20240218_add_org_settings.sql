@@ -7,4 +7,11 @@ ADD COLUMN IF NOT EXISTS bod_member_2 TEXT,
 ADD COLUMN IF NOT EXISTS bod_member_3 TEXT,
 ADD COLUMN IF NOT EXISTS general_manager TEXT,
 ADD COLUMN IF NOT EXISTS bod_secretary TEXT,
-ADD COLUMN IF NOT EXISTS signature_url TEXT;
+ADD COLUMN IF NOT EXISTS signature_url TEXT,
+ADD COLUMN IF NOT EXISTS bod_chairman_sig TEXT,
+ADD COLUMN IF NOT EXISTS bod_vice_chairman_sig TEXT,
+ADD COLUMN IF NOT EXISTS bod_secretary_sig TEXT,
+ADD COLUMN IF NOT EXISTS bod_member_1_sig TEXT,
+ADD COLUMN IF NOT EXISTS bod_member_2_sig TEXT,
+ADD COLUMN IF NOT EXISTS bod_member_3_sig TEXT,
+ADD COLUMN IF NOT EXISTS general_manager_sig TEXT;
