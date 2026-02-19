@@ -127,8 +127,8 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                     })}
                 </div>
 
-                <div className="mt-16">
-                    <p className="mb-8">
+                <div className="mt-16 text-center">
+                    <p className="mb-8 font-bold">
                         UNANIMOUSLY APPROVED.
                     </p>
                     {data.approvedOn && (
@@ -141,51 +141,72 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                     {data.signatories && data.signatories.length > 0 ? (
                         <div className="mt-12 space-y-12 break-inside-avoid">
                             {/* 1. Chairman & Secretary (Top) usually certify */}
-                            <div className="grid grid-cols-2 gap-8">
-                                {data.signatories.filter(s => s?.role === 'secretary').map((signer, i) => (
-                                    <div key={i} className="text-center">
-                                        <p className="mb-8 text-left">I hereby certify to the correctness of the foregoing.</p>
-                                        <div className="mt-4">
-                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1">{signer.name}</p>
-                                            <p className="text-sm italic">{signer.position}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
                             <p className="mt-8 text-center uppercase font-bold text-sm tracking-widest">Attested by:</p>
 
                             {/* 2. Chairman centered */}
                             <div className="flex justify-center">
                                 {data.signatories.filter(s => s?.role === 'chairman').map((signer, i) => (
-                                    <div key={i} className="text-center">
-                                        <div className="mt-4">
-                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1">{signer.name}</p>
+                                    <div key={i} className="text-center flex flex-col items-center relative">
+                                        <div className="mt-4 relative flex flex-col items-center">
+                                            {signer.signature && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={signer.signature}
+                                                    alt="Signature"
+                                                    className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
+                                                />
+                                            )}
+                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">{signer.name}</p>
                                             <p className="text-sm italic">{signer.position}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* 3. Members & Vice-Chairman centered/grid */}
+                            {/* 3. Members, Vice-Chairman & Secretary grid */}
                             <div className="grid grid-cols-2 gap-x-8 gap-y-12 mt-8">
-                                {data.signatories.filter(s => s?.role === 'member' || s?.role === 'vice-chairman').map((signer, i) => (
-                                    <div key={i} className="text-center">
-                                        <div className="mt-4">
-                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1">{signer.name}</p>
-                                            <p className="text-sm italic">{signer.position}</p>
+                                {data.signatories
+                                    .filter(s => ['member', 'vice-chairman', 'secretary'].includes(s?.role))
+                                    .sort((a, b) => {
+                                        const order = { 'vice-chairman': 1, 'secretary': 2, 'member': 3 }
+                                        return (order[a.role as keyof typeof order] || 4) - (order[b.role as keyof typeof order] || 4)
+                                    })
+                                    .map((signer, i) => (
+                                        <div key={i} className="text-center flex flex-col items-center relative">
+                                            {signer.role === 'secretary' && (
+                                                <p className="mb-8 text-center text-xs">I hereby certify to the correctness of the foregoing.</p>
+                                            )}
+                                            <div className={`${signer.role === 'secretary' ? '' : 'mt-auto'} relative flex flex-col items-center`}>
+                                                {signer.signature && (
+                                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                                    <img
+                                                        src={signer.signature}
+                                                        alt="Signature"
+                                                        className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
+                                                    />
+                                                )}
+                                                <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">{signer.name}</p>
+                                                <p className="text-sm italic">{signer.position}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
 
                             {/* 4. GM (Concurred?) centered */}
                             <div className="mt-12 flex justify-center">
                                 {data.signatories.filter(s => s?.role === 'gm').map((signer, i) => (
-                                    <div key={i} className="text-center">
-                                        <p className="mb-4 text-left">Concurred:</p>
-                                        <div className="mt-4">
-                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1">{signer.name}</p>
+                                    <div key={i} className="text-center flex flex-col items-center relative">
+                                        <p className="mb-4 text-center">Concurred:</p>
+                                        <div className="mt-4 relative flex flex-col items-center">
+                                            {signer.signature && (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={signer.signature}
+                                                    alt="Signature"
+                                                    className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
+                                                />
+                                            )}
+                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">{signer.name}</p>
                                             <p className="text-sm italic">{signer.position}</p>
                                         </div>
                                     </div>

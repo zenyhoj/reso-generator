@@ -5,6 +5,9 @@ export const signerSchema = z.object({
     name: z.string().min(1, "Name is required"),
     position: z.string().min(1, "Position is required"),
     role: z.enum(["chairman", "vice-chairman", "secretary", "member", "gm"]),
+    signature: z.string().optional(),
+    isCertified: z.boolean().optional(),
+    certifiedAt: z.string().optional(),
 })
 
 export const resolutionSchema = z.object({

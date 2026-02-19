@@ -42,6 +42,38 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
         water_district_contact?: string
     }>({})
 
+    const handleSyncSignatories = async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single()
+
+        if (profile) {
+            const newSignatories = []
+            if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman" })
+            if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman" })
+            if (profile.bod_secretary) {
+                newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary" })
+            } else if (profile.full_name) {
+                newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary" })
+            }
+            if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member" })
+            if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member" })
+            if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member" })
+            if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm" })
+
+            if (newSignatories.length > 0) {
+                form.setValue("signatories", newSignatories as any)
+                toast.success("Signatories updated from settings!")
+            }
+        }
+    }
+
     // Fetch Organization Settings
     useEffect(() => {
         async function loadOrgSettings() {
@@ -64,25 +96,23 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     water_district_contact: profile.water_district_contact
                 })
 
-                // Pre-fill header info (in a real app, this might be separate state, 
-                // but for now we might need to pass it to LivePreview or added to form if schema supports it)
-                // For Signatories:
-                const newSignatories = []
-                if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman" })
-                if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman" })
-                if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member" })
-                if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member" })
-                if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member" })
-                // Add Secretariat (User)? The prompt said "the user is the bac secretariat".
-                // We'll add user as secretary if not explicitly defined in settings? 
-                // Settings didn't have BAC Sec field, so we assume the current user is.
-                // But the profile table has `full_name`.
-                if (profile.full_name) newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary" })
-                if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm" })
+                if (form.getValues("signatories").length === 0) {
+                    const newSignatories = []
+                    if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman" })
+                    if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman" })
+                    if (profile.bod_secretary) {
+                        newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary" })
+                    } else if (profile.full_name) {
+                        newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary" })
+                    }
+                    if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member" })
+                    if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member" })
+                    if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member" })
+                    if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm" })
 
-                // update form if signatories are empty
-                if (form.getValues("signatories").length === 0 && newSignatories.length > 0) {
-                    form.setValue("signatories", newSignatories as any)
+                    if (newSignatories.length > 0) {
+                        form.setValue("signatories", newSignatories as any)
+                    }
                 }
             }
         }
@@ -263,7 +293,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                 {/* Left Panel: Form */}
                 <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto p-8 scrollbar-thin no-print">
                     <div className="max-w-xl mx-auto">
-                        <ResolutionForm form={form} />
+                        <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} />
                     </div>
                 </div>
 

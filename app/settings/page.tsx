@@ -27,6 +27,7 @@ const settingsSchema = z.object({
     bod_member_1: z.string().min(1, "Required"),
     bod_member_2: z.string().min(1, "Required"),
     general_manager: z.string().min(1, "Required"),
+    signature_url: z.string().optional(),
 })
 
 type SettingsValues = z.infer<typeof settingsSchema>
@@ -51,6 +52,7 @@ export default function SettingsPage() {
             bod_member_1: "",
             bod_member_2: "",
             general_manager: "",
+            signature_url: "",
         },
     })
 
@@ -94,6 +96,7 @@ export default function SettingsPage() {
                         bod_member_1: profile.bod_member_1 || "",
                         bod_member_2: profile.bod_member_2 || "",
                         general_manager: profile.general_manager || "",
+                        signature_url: profile.signature_url || "",
                     })
                 }
             } catch (error: any) {
@@ -140,6 +143,37 @@ export default function SettingsPage() {
         } catch (error: any) {
             console.error("Error uploading logo:", error)
             toast.error("Failed to upload logo. Ensure 'logos' bucket exists and is public.")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    async function onUploadSignature(event: React.ChangeEvent<HTMLInputElement>) {
+        if (!event.target.files || event.target.files.length === 0) return
+        if (!user) return
+
+        const file = event.target.files[0]
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${user.id}-sig-${Math.random()}.${fileExt}`
+        const filePath = `${fileName}`
+
+        setSaving(true)
+        try {
+            const { error: uploadError } = await supabase.storage
+                .from('logos') // Reusing logos bucket for now
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('logos')
+                .getPublicUrl(filePath)
+
+            form.setValue("signature_url", publicUrl, { shouldDirty: true })
+            toast.success("Signature uploaded successfully. Don't forget to save changes!")
+        } catch (error: any) {
+            console.error("Error uploading signature:", error)
+            toast.error("Failed to upload signature.")
         } finally {
             setSaving(false)
         }
@@ -353,6 +387,29 @@ export default function SettingsPage() {
                                 {form.formState.errors.general_manager && (
                                     <p className="text-sm text-destructive">{form.formState.errors.general_manager.message}</p>
                                 )}
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-4">
+                                <Label>My E-Signature</Label>
+                                <div className="flex items-center gap-4">
+                                    {form.watch("signature_url") && (
+                                        /* eslint-disable-next-line @next/next/no-img-element */
+                                        <img
+                                            src={form.watch("signature_url")}
+                                            alt="Signature Preview"
+                                            className="h-20 object-contain border rounded-md p-1 bg-white"
+                                        />
+                                    )}
+                                    <Input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={onUploadSignature}
+                                        className="max-w-xs"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground">Upload your transparent PNG signature. This will be used to certify resolutions.</p>
                             </div>
                         </CardContent>
                     </Card>

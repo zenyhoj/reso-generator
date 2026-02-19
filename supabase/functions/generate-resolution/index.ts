@@ -1,12 +1,14 @@
 
+// @ts-ignore: Deno module imports
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
+
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -21,7 +23,7 @@ Deno.serve(async (req) => {
         // 2. Parse Request Body
         let requestData
         try {
-            requestData = await req.json()
+            requestData = await req.json() as any
         } catch (e) {
             throw new Error("Invalid request body. Expected JSON.")
         }
@@ -74,12 +76,12 @@ Deno.serve(async (req) => {
         );
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json() as any;
             console.error("Gemini API Error:", JSON.stringify(errorData));
             throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
         }
 
-        const data = await response.json();
+        const data = await response.json() as any;
         console.log("Gemini Raw Response:", JSON.stringify(data));
 
         const responseContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
