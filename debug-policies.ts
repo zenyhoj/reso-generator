@@ -1,6 +1,6 @@
 
-const supabaseUrl = "https://tmiaojrqvgrodgldozcu.supabase.co"
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtaWFvanJxdmdyb2RnbGRvemN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNzE2NTQsImV4cCI6MjA4Njk0NzY1NH0.s3pPPnDIsoP2NfDewZ-zvEBEByGzJnlCAeXv6_fMyrs"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://tmiaojrqvgrodgldozcu.supabase.co"
+const supabaseKey = process.env.SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 async function check() {
     console.log("Checking policies via migrate-profiles function...")

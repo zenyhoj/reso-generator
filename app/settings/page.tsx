@@ -28,6 +28,13 @@ const settingsSchema = z.object({
     bod_member_2: z.string().min(1, "Required"),
     general_manager: z.string().min(1, "Required"),
     signature_url: z.string().optional(),
+    bod_chairman_sig_url: z.string().optional(),
+    bod_vice_chairman_sig_url: z.string().optional(),
+    bod_secretary_sig_url: z.string().optional(),
+    bod_member_1_sig_url: z.string().optional(),
+    bod_member_2_sig_url: z.string().optional(),
+    bod_member_3_sig_url: z.string().optional(),
+    general_manager_sig_url: z.string().optional(),
 })
 
 type SettingsValues = z.infer<typeof settingsSchema>
@@ -53,6 +60,13 @@ export default function SettingsPage() {
             bod_member_2: "",
             general_manager: "",
             signature_url: "",
+            bod_chairman_sig_url: "",
+            bod_vice_chairman_sig_url: "",
+            bod_secretary_sig_url: "",
+            bod_member_1_sig_url: "",
+            bod_member_2_sig_url: "",
+            bod_member_3_sig_url: "",
+            general_manager_sig_url: "",
         },
     })
 
@@ -97,6 +111,13 @@ export default function SettingsPage() {
                         bod_member_2: profile.bod_member_2 || "",
                         general_manager: profile.general_manager || "",
                         signature_url: profile.signature_url || "",
+                        bod_chairman_sig_url: profile.bod_chairman_sig_url || "",
+                        bod_vice_chairman_sig_url: profile.bod_vice_chairman_sig_url || "",
+                        bod_secretary_sig_url: profile.bod_secretary_sig_url || "",
+                        bod_member_1_sig_url: profile.bod_member_1_sig_url || "",
+                        bod_member_2_sig_url: profile.bod_member_2_sig_url || "",
+                        bod_member_3_sig_url: profile.bod_member_3_sig_url || "",
+                        general_manager_sig_url: profile.general_manager_sig_url || "",
                     })
                 }
             } catch (error: any) {
@@ -148,19 +169,20 @@ export default function SettingsPage() {
         }
     }
 
-    async function onUploadSignature(event: React.ChangeEvent<HTMLInputElement>) {
+
+    async function handleSignatureUpload(event: React.ChangeEvent<HTMLInputElement>, field: keyof SettingsValues) {
         if (!event.target.files || event.target.files.length === 0) return
         if (!user) return
 
         const file = event.target.files[0]
         const fileExt = file.name.split('.').pop()
-        const fileName = `${user.id}-sig-${Math.random()}.${fileExt}`
+        const fileName = `${user.id}-${field}-${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
 
         setSaving(true)
         try {
             const { error: uploadError } = await supabase.storage
-                .from('logos') // Reusing logos bucket for now
+                .from('logos') // Reusing logos bucket
                 .upload(filePath, file)
 
             if (uploadError) throw uploadError
@@ -169,8 +191,8 @@ export default function SettingsPage() {
                 .from('logos')
                 .getPublicUrl(filePath)
 
-            form.setValue("signature_url", publicUrl, { shouldDirty: true })
-            toast.success("Signature uploaded successfully. Don't forget to save changes!")
+            form.setValue(field, publicUrl, { shouldDirty: true })
+            toast.success("Signature uploaded successfully!")
         } catch (error: any) {
             console.error("Error uploading signature:", error)
             toast.error("Failed to upload signature.")
@@ -391,25 +413,49 @@ export default function SettingsPage() {
 
                             <Separator />
 
+
+
+
+
                             <div className="space-y-4">
-                                <Label>My E-Signature</Label>
-                                <div className="flex items-center gap-4">
-                                    {form.watch("signature_url") && (
-                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                        <img
-                                            src={form.watch("signature_url")}
-                                            alt="Signature Preview"
-                                            className="h-20 object-contain border rounded-md p-1 bg-white"
-                                        />
-                                    )}
-                                    <Input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={onUploadSignature}
-                                        className="max-w-xs"
-                                    />
+                                <h4 className="text-sm font-medium">Digital Signatures</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {[
+                                        { label: "BOD Chairman", name: "bod_chairman", sigField: "bod_chairman_sig_url" },
+                                        { label: "BOD Vice-Chairman", name: "bod_vice_chairman", sigField: "bod_vice_chairman_sig_url" },
+                                        { label: "BOD Secretary", name: "bod_secretary", sigField: "bod_secretary_sig_url" },
+                                        { label: "BOD Member 1", name: "bod_member_1", sigField: "bod_member_1_sig_url" },
+                                        { label: "BOD Member 2", name: "bod_member_2", sigField: "bod_member_2_sig_url" },
+                                        { label: "General Manager", name: "general_manager", sigField: "general_manager_sig_url" },
+                                    ].map((field) => (
+                                        <div key={field.sigField} className="space-y-2 border p-4 rounded-md">
+                                            <Label className="text-xs font-semibold uppercase text-muted-foreground">{field.label}</Label>
+                                            <div className="flex items-center gap-4">
+                                                {form.watch(field.sigField as keyof SettingsValues) ? (
+                                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                                    <img
+                                                        src={form.watch(field.sigField as keyof SettingsValues)}
+                                                        alt="Signature"
+                                                        className="h-12 object-contain"
+                                                    />
+                                                ) : (
+                                                    <div className="h-12 w-24 bg-slate-100 rounded flex items-center justify-center text-xs text-slate-400 italic">
+                                                        No signature
+                                                    </div>
+                                                )}
+                                                <div className="flex-1">
+                                                    <Input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => handleSignatureUpload(e, field.sigField as keyof SettingsValues)}
+                                                        className="h-9 text-xs"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <p className="text-xs text-muted-foreground">Upload your transparent PNG signature. This will be used to certify resolutions.</p>
+                                <p className="text-xs text-muted-foreground">Upload transparent PNG signatures for each signatory.</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -428,6 +474,6 @@ export default function SettingsPage() {
                     </div>
                 </form>
             </div>
-        </div>
+        </div >
     )
 }
