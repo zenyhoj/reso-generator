@@ -55,17 +55,17 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
 
         if (profile) {
             const newSignatories = []
-            if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signature: profile.bod_chairman_sig })
-            if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signature: profile.bod_vice_chairman_sig })
+            if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signatureUrl: profile.bod_chairman_sig_url })
+            if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signatureUrl: profile.bod_vice_chairman_sig_url })
             if (profile.bod_secretary) {
-                newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signature: profile.bod_secretary_sig })
+                newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signatureUrl: profile.bod_secretary_sig_url })
             } else if (profile.full_name) {
-                newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signature: profile.bod_secretary_sig })
+                newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signatureUrl: profile.signature_url })
             }
-            if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signature: profile.bod_member_1_sig })
-            if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signature: profile.bod_member_2_sig })
-            if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signature: profile.bod_member_3_sig })
-            if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signature: profile.general_manager_sig })
+            if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_1_sig_url })
+            if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_2_sig_url })
+            if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_3_sig_url })
+            if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signatureUrl: profile.general_manager_sig_url })
 
             if (newSignatories.length > 0) {
                 form.setValue("signatories", newSignatories as any)
@@ -98,17 +98,17 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
 
                 if (form.getValues("signatories").length === 0) {
                     const newSignatories = []
-                    if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signature: profile.bod_chairman_sig })
-                    if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signature: profile.bod_vice_chairman_sig })
+                    if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signatureUrl: profile.bod_chairman_sig_url })
+                    if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signatureUrl: profile.bod_vice_chairman_sig_url })
                     if (profile.bod_secretary) {
-                        newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signature: profile.bod_secretary_sig })
+                        newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signatureUrl: profile.bod_secretary_sig_url })
                     } else if (profile.full_name) {
-                        newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signature: profile.bod_secretary_sig })
+                        newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signatureUrl: profile.signature_url })
                     }
-                    if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signature: profile.bod_member_1_sig })
-                    if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signature: profile.bod_member_2_sig })
-                    if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signature: profile.bod_member_3_sig })
-                    if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signature: profile.general_manager_sig })
+                    if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_1_sig_url })
+                    if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_2_sig_url })
+                    if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_3_sig_url })
+                    if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signatureUrl: profile.general_manager_sig_url })
 
                     if (newSignatories.length > 0) {
                         form.setValue("signatories", newSignatories as any)
@@ -136,8 +136,18 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
 
         try {
             const supabase = createClient()
+
+            // Construct context from settings
+            let context = ""
+            if (orgSettings.water_district_name) {
+                context += `Water District Name: ${orgSettings.water_district_name}\n`
+            }
+            if (orgSettings.address) {
+                context += `Address: ${orgSettings.address}\n`
+            }
+
             const { data, error } = await supabase.functions.invoke('generate-resolution', {
-                body: { prompt: aiPrompt }
+                body: { prompt: aiPrompt, context: context.trim() }
             })
 
             if (error) throw error

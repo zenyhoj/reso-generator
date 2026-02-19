@@ -20,6 +20,32 @@ Deno.serve(async (req: Request) => {
             throw new Error("Missing GEMINI_API_KEY environment variable")
         }
 
+        // 2. Auth Check
+        const authHeader = req.headers.get('Authorization')
+        if (!authHeader) {
+            return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: authHeader } } }
+        )
+
+        const {
+            data: { user },
+        } = await supabaseClient.auth.getUser()
+
+        if (!user) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), {
+                status: 401,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            })
+        }
+
         // 2. Parse Request Body
         let requestData
         try {
