@@ -42,6 +42,8 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                         width: auto !important;
                         float: none !important;
                         display: block !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
                     }
                     .preview-panel, .preview-wrapper {
                         overflow: visible !important;
@@ -149,13 +151,13 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
 
                 {/* Signatories Section */}
                 {data.signatories && data.signatories.length > 0 ? (
-                    <div className="space-y-12 break-inside-avoid">
+                    <div className="space-y-12">
                         {(data.footer_certified_text ?? 'We hereby certify to the correctness of the foregoing resolution.').trim() && (
                             <p className="text-left">{data.footer_certified_text || 'We hereby certify to the correctness of the foregoing resolution.'}</p>
                         )}
 
                         {/* 2. Chairman centered */}
-                        <div className="flex justify-center">
+                        <div className="flex justify-center break-inside-avoid">
                             {data.signatories.filter(s => s?.role === 'chairman').map((signer, i) => (
                                 <div key={i} className="text-center flex flex-col items-center relative">
                                     <div className="mt-4 relative flex flex-col items-center">
@@ -175,7 +177,7 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                         </div>
 
                         {/* 3. Members, Vice-Chairman & Secretary grid */}
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-12 mt-8">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-12 mt-8 break-inside-avoid">
                             {data.signatories
                                 .filter(s => ['member', 'vice-chairman', 'secretary'].includes(s?.role))
                                 .sort((a, b) => {
@@ -201,7 +203,7 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                         </div>
 
                         {/* 4. GM (Concurred?) centered */}
-                        <div className="mt-12 flex justify-center">
+                        <div className="mt-12 flex justify-center break-inside-avoid">
                             {data.signatories.filter(s => s?.role === 'gm').map((signer, i) => (
                                 <div key={i} className="text-center flex flex-col items-center relative">
                                     <p className="mb-4 text-center">Concurred:</p>

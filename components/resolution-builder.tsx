@@ -327,8 +327,8 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
                 </div>
 
-                <div className="preview-panel flex-1 bg-slate-200 dark:bg-slate-800 overflow-y-auto p-12 flex justify-center scrollbar-thin print:bg-white print:p-0 print:overflow-visible print:w-full">
-                    <div ref={previewRef} className="preview-wrapper print:m-0 print:shadow-none">
+                <div className="preview-panel flex-1 bg-slate-200 dark:bg-slate-800 overflow-y-auto p-12 flex justify-center scrollbar-thin print:bg-white print:p-0 print:m-0 print:overflow-visible print:w-full print:block">
+                    <div ref={previewRef} className="preview-wrapper print:m-0 print:p-0 print:shadow-none print:w-full">
                         <LivePreview data={values} orgSettings={orgSettings} />
                     </div>
                 </div>
