@@ -144,7 +144,13 @@
     display: block !important;
   }
 
-  .no-print {
+  body .no-print,
+  html .no-print,
+  div.no-print,
+  header.no-print,
+  footer.no-print,
+  section.no-print,
+  aside.no-print {
     display: none !important;
   }
 

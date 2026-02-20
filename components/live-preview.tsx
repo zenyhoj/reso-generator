@@ -50,7 +50,9 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                         background: white !important;
                         padding: 0 !important;
                     }
-                    .no-print {
+                    body .no-print,
+                    html .no-print,
+                    div.no-print {
                         display: none !important;
                     }
                 }

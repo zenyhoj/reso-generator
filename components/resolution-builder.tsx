@@ -323,7 +323,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel: Form */}
-                <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto px-8 py-6 scrollbar-thin no-print">
+                <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto px-8 py-6 scrollbar-thin no-print print:hidden">
                     <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
                 </div>
 
