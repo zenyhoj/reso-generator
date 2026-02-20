@@ -30,6 +30,11 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
             whereasClauses: [""],
             resolvedClauses: [""],
             signatories: [],
+            movant_name: "",
+            seconder_name: "",
+            footer_approved_text: "Unanimously approved.",
+            footer_adopted_text: "",
+            footer_certified_text: "We hereby certify to the correctness of the foregoing resolution.",
         },
         mode: "onChange"
     })
@@ -235,7 +240,10 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     whereasClauses: currentValues.whereasClauses,
                     resolvedClauses: currentValues.resolvedClauses,
                     movant_name: currentValues.movant_name,
-                    seconder_name: currentValues.seconder_name
+                    seconder_name: currentValues.seconder_name,
+                    footer_approved_text: currentValues.footer_approved_text,
+                    footer_adopted_text: currentValues.footer_adopted_text,
+                    footer_certified_text: currentValues.footer_certified_text,
                 },
                 signatories: currentValues.signatories,
                 status: 'draft'
@@ -315,14 +323,12 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
 
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel: Form */}
-                <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto p-8 scrollbar-thin no-print">
-                    <div className="max-w-xl mx-auto">
-                        <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
-                    </div>
+                <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto px-8 py-6 scrollbar-thin no-print">
+                    <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
                 </div>
 
-                <div className="flex-1 bg-slate-200 dark:bg-slate-800 overflow-y-auto p-12 flex justify-center scrollbar-thin print:bg-white print:p-0 print:overflow-visible print:w-full">
-                    <div ref={previewRef} className="print:m-0 print:shadow-none">
+                <div className="preview-panel flex-1 bg-slate-200 dark:bg-slate-800 overflow-y-auto p-12 flex justify-center scrollbar-thin print:bg-white print:p-0 print:overflow-visible print:w-full">
+                    <div ref={previewRef} className="preview-wrapper print:m-0 print:shadow-none">
                         <LivePreview data={values} orgSettings={orgSettings} />
                     </div>
                 </div>

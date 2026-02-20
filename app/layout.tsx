@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${merriweather.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${merriweather.variable} font-sans antialiased`} suppressHydrationWarning>
         <TooltipProvider>
           {children}
         </TooltipProvider>

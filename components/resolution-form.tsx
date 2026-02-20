@@ -5,11 +5,11 @@ import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
 import { UseFormReturn, useFieldArray } from "react-hook-form"
 import { ResolutionFormValues } from "@/types/schema"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, RefreshCw, CheckCircle, PenTool, UserCheck } from "lucide-react"
+import { Plus, Trash2, RefreshCw, CheckCircle, PenTool, ChevronUp, ChevronDown } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -20,12 +20,12 @@ interface ResolutionFormProps {
 }
 
 export function ResolutionForm({ form, onSyncSignatories, officials = [] }: ResolutionFormProps) {
-    const { fields: whereasFields, append: appendWhereas, remove: removeWhereas } = useFieldArray({
+    const { fields: whereasFields, append: appendWhereas, remove: removeWhereas, move: moveWhereas } = useFieldArray({
         control: form.control,
         name: "whereasClauses" as any,
     })
 
-    const { fields: resolvedFields, append: appendResolved, remove: removeResolved } = useFieldArray({
+    const { fields: resolvedFields, append: appendResolved, remove: removeResolved, move: moveResolved } = useFieldArray({
         control: form.control,
         name: "resolvedClauses" as any,
     })
@@ -35,9 +35,14 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
         name: "signatories",
     })
 
+    // Footer lines as a controlled array via form values
+    const footerApproved = form.watch("footer_approved_text") ?? "Unanimously approved."
+    const footerAdopted = form.watch("footer_adopted_text") ?? ""
+    const footerCertified = form.watch("footer_certified_text") ?? "We hereby certify to the correctness of the foregoing resolution."
+
     return (
         <Form {...form}>
-            <form className="space-y-8">
+            <form className="space-y-8 pb-8">
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Basic Information</h3>
                     <div className="grid grid-cols-2 gap-4">
@@ -111,9 +116,6 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                                 <FormControl>
                                     <Textarea placeholder="APPROVING THE BUDGET FOR..." className="resize-none min-h-[80px]" {...field} />
                                 </FormControl>
-                                <FormDescription>
-                                    Enter the full title of the resolution in uppercase.
-                                </FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -128,9 +130,6 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                                 <FormControl>
                                     <Textarea placeholder="A brief summary of the resolution..." className="resize-none min-h-[60px]" {...field} />
                                 </FormControl>
-                                <FormDescription>
-                                    A short summary for the dashboard.
-                                </FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -139,6 +138,7 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
 
                 <Separator />
 
+                {/* WHEREAS Clauses */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-medium">Whereas Clauses</h3>
@@ -147,7 +147,23 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                         </Button>
                     </div>
                     {whereasFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-2">
+                        <div key={field.id} className="flex gap-2 items-start">
+                            <div className="flex flex-col gap-1 pt-1">
+                                <Button
+                                    type="button" variant="ghost" size="icon"
+                                    className="h-6 w-6" disabled={index === 0}
+                                    onClick={() => moveWhereas(index, index - 1)}
+                                >
+                                    <ChevronUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                    type="button" variant="ghost" size="icon"
+                                    className="h-6 w-6" disabled={index === whereasFields.length - 1}
+                                    onClick={() => moveWhereas(index, index + 1)}
+                                >
+                                    <ChevronDown className="h-3 w-3" />
+                                </Button>
+                            </div>
                             <FormField
                                 control={form.control}
                                 name={`whereasClauses.${index}`}
@@ -169,6 +185,7 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
 
                 <Separator />
 
+                {/* RESOLVED Clauses */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-medium">Resolved Clauses</h3>
@@ -177,7 +194,23 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                         </Button>
                     </div>
                     {resolvedFields.map((field, index) => (
-                        <div key={field.id} className="flex gap-2">
+                        <div key={field.id} className="flex gap-2 items-start">
+                            <div className="flex flex-col gap-1 pt-1">
+                                <Button
+                                    type="button" variant="ghost" size="icon"
+                                    className="h-6 w-6" disabled={index === 0}
+                                    onClick={() => moveResolved(index, index - 1)}
+                                >
+                                    <ChevronUp className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                    type="button" variant="ghost" size="icon"
+                                    className="h-6 w-6" disabled={index === resolvedFields.length - 1}
+                                    onClick={() => moveResolved(index, index + 1)}
+                                >
+                                    <ChevronDown className="h-3 w-3" />
+                                </Button>
+                            </div>
                             <FormField
                                 control={form.control}
                                 name={`resolvedClauses.${index}`}
@@ -199,6 +232,7 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
 
                 <Separator />
 
+                {/* Approval Details */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Approval Details</h3>
                     <div className="grid grid-cols-2 gap-4">
@@ -267,68 +301,87 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
 
                 <Separator />
 
+                {/* Footer Lines */}
                 <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Footer Settings</h3>
-                    <div className="grid grid-cols-1 gap-4">
+                    <h3 className="text-lg font-medium">Footer Lines</h3>
+                    <p className="text-sm text-muted-foreground">Edit or clear any footer line. Leave blank to hide it from the document.</p>
+
+                    {/* Approved line */}
+                    <div className="flex gap-2 items-start">
                         <FormField
                             control={form.control}
                             name="footer_approved_text"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Approved Text</FormLabel>
+                                <FormItem className="flex-1">
+                                    <FormLabel>Approval line</FormLabel>
                                     <FormControl>
-                                        <Textarea
-                                            placeholder="Unanimously approved."
-                                            className="resize-none min-h-[60px]"
-                                            {...field}
-                                        />
+                                        <Textarea className="resize-none min-h-[50px]" placeholder="Unanimously approved." {...field} />
                                     </FormControl>
-                                    <FormDescription>Defaults to "Unanimously approved." (leave blank for default)</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        <Button
+                            type="button" variant="ghost" size="icon" className="mt-6"
+                            onClick={() => form.setValue("footer_approved_text", "")}
+                            title="Clear"
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+
+                    {/* Adopted line */}
+                    <div className="flex gap-2 items-start">
                         <FormField
                             control={form.control}
                             name="footer_adopted_text"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Adopted Text</FormLabel>
+                                <FormItem className="flex-1">
+                                    <FormLabel>Adoption line</FormLabel>
                                     <FormControl>
-                                        <Textarea
-                                            placeholder="Adopted this [Date] at [Location]."
-                                            className="resize-none min-h-[60px]"
-                                            {...field}
-                                        />
+                                        <Textarea className="resize-none min-h-[50px]" placeholder="Adopted this [date] at [location]. (auto-generated if blank)" {...field} />
                                     </FormControl>
-                                    <FormDescription>Use [Date] and [Location] as placeholders if needed, or leave blank for default.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        <Button
+                            type="button" variant="ghost" size="icon" className="mt-6"
+                            onClick={() => form.setValue("footer_adopted_text", "\u200b")}
+                            title="Hide"
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </div>
+
+                    {/* Certified line */}
+                    <div className="flex gap-2 items-start">
                         <FormField
                             control={form.control}
                             name="footer_certified_text"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Certification Text</FormLabel>
+                                <FormItem className="flex-1">
+                                    <FormLabel>Certification line</FormLabel>
                                     <FormControl>
-                                        <Textarea
-                                            placeholder="We hereby certify to the correctness of the foregoing resolution."
-                                            className="resize-none min-h-[60px]"
-                                            {...field}
-                                        />
+                                        <Textarea className="resize-none min-h-[50px]" placeholder="We hereby certify to the correctness of the foregoing resolution." {...field} />
                                     </FormControl>
-                                    <FormDescription>Defaults to standard certification text (leave blank for default)</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        <Button
+                            type="button" variant="ghost" size="icon" className="mt-6"
+                            onClick={() => form.setValue("footer_certified_text", "")}
+                            title="Clear"
+                        >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                     </div>
                 </div>
 
                 <Separator />
 
+                {/* Signatories */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-medium">Signatories</h3>
@@ -369,7 +422,6 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                                                 return
                                             }
 
-                                            // Fetch current user's signature from profile
                                             const { data: profile } = await supabase
                                                 .from("profiles")
                                                 .select("signature_url")

@@ -106,24 +106,50 @@
     @apply border-border;
   }
 
+  html {
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    height: 100%;
   }
 }
 
 /* Print Styles for Resolutions */
 @media print {
+
+  body {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Force all layout containers to be part of the print flow */
+  html,
+  #__next,
+  .fixed,
+  .absolute,
+  div[class*="fixed"],
+  div[class*="absolute"],
+  div[class*="overflow-hidden"],
+  div[class*="overflow-y-auto"] {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    width: auto !important;
+    display: block !important;
+  }
+
   .no-print {
     display: none !important;
   }
 
-  body {
-    background: white;
-    color: black;
-  }
-
   @page {
     margin: 1in;
-    size: auto;
+    size: 8.5in 13in;
   }
 }

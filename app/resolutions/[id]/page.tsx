@@ -1,7 +1,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import { ResolutionBuilder } from '@/components/resolution-builder'
+import { ResolutionBuilderClient } from '@/components/resolution-builder-client'
 import { ResolutionFormValues } from '@/types/schema'
 
 export default async function EditResolutionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -36,19 +36,17 @@ export default async function EditResolutionPage({ params }: { params: Promise<{
         whereasClauses: resolution.content?.whereasClauses || [""],
         resolvedClauses: resolution.content?.resolvedClauses || [""],
         signatories: resolution.signatories || [],
+        movant_name: resolution.content?.movant_name || "",
+        seconder_name: resolution.content?.seconder_name || "",
+        footer_approved_text: resolution.content?.footer_approved_text ?? "Unanimously approved.",
+        footer_adopted_text: resolution.content?.footer_adopted_text ?? "",
+        footer_certified_text: resolution.content?.footer_certified_text ?? "We hereby certify to the correctness of the foregoing resolution.",
     }
 
     return (
-        <div className="h-screen flex flex-col">
-            <header className="px-6 py-3 border-b flex items-center justify-between bg-white shrink-0 no-print">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-lg font-bold font-serif text-slate-900">
-                        Edit Resolution
-                    </h1>
-                </div>
-            </header>
+        <div className="fixed inset-0 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">
-                <ResolutionBuilder initialData={initialData} />
+                <ResolutionBuilderClient initialData={initialData} />
             </div>
         </div>
     )

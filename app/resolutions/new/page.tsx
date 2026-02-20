@@ -1,7 +1,7 @@
 
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import { ResolutionBuilder } from '@/components/resolution-builder'
+import { ResolutionBuilderClient } from '@/components/resolution-builder-client'
 
 export default async function NewResolutionPage() {
     const supabase = await createClient()
@@ -12,16 +12,9 @@ export default async function NewResolutionPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col">
-            <header className="px-6 py-3 border-b flex items-center justify-between bg-white shrink-0">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-lg font-bold font-serif text-slate-900">
-                        New Resolution
-                    </h1>
-                </div>
-            </header>
+        <div className="fixed inset-0 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">
-                <ResolutionBuilder />
+                <ResolutionBuilderClient />
             </div>
         </div>
     )
