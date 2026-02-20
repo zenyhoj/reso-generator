@@ -8,9 +8,10 @@ import { resolutionSchema, type ResolutionFormValues } from "@/types/schema"
 import { ResolutionForm } from "@/components/resolution-form"
 import { LivePreview } from "@/components/live-preview"
 import { Button } from "@/components/ui/button"
+import { exportToDocx } from "@/utils/export-docx"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { Sparkles, Save, Printer, Loader2 } from "lucide-react"
+import { Sparkles, Save, Printer, Loader2, Download } from "lucide-react"
 import Link from 'next/link'
 
 interface ResolutionBuilderProps {
