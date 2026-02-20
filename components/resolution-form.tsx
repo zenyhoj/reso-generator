@@ -16,9 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ResolutionFormProps {
     form: UseFormReturn<ResolutionFormValues>
     onSyncSignatories?: () => void
+    officials?: string[]
 }
 
-export function ResolutionForm({ form, onSyncSignatories }: ResolutionFormProps) {
+export function ResolutionForm({ form, onSyncSignatories, officials = [] }: ResolutionFormProps) {
     const { fields: whereasFields, append: appendWhereas, remove: removeWhereas } = useFieldArray({
         control: form.control,
         name: "whereasClauses" as any,
@@ -194,6 +195,74 @@ export function ResolutionForm({ form, onSyncSignatories }: ResolutionFormProps)
                             </Button>
                         </div>
                     ))}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Approval Details</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="movant_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Moved by</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Director" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {officials.length > 0 ? (
+                                                officials.map((official) => (
+                                                    <SelectItem key={official} value={official}>
+                                                        {official}
+                                                    </SelectItem>
+                                                ))
+                                            ) : (
+                                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                                    No officials found in settings.
+                                                </div>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="seconder_name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Seconded by</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Director" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {officials.length > 0 ? (
+                                                officials.map((official) => (
+                                                    <SelectItem key={official} value={official}>
+                                                        {official}
+                                                    </SelectItem>
+                                                ))
+                                            ) : (
+                                                <div className="p-2 text-sm text-muted-foreground text-center">
+                                                    No officials found in settings.
+                                                </div>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
                 </div>
 
                 <Separator />

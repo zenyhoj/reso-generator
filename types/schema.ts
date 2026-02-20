@@ -21,6 +21,8 @@ export const resolutionSchema = z.object({
     whereasClauses: z.array(z.string().min(5, "Clause cannot be empty")).min(1, "At least one WHEREAS clause is required"),
     resolvedClauses: z.array(z.string().min(5, "Clause cannot be empty")).min(1, "At least one RESOLVED clause is required"),
     signatories: z.array(signerSchema).min(1, "At least one signatory is required"),
+    movant_name: z.string().optional(),
+    seconder_name: z.string().optional(),
 })
 
 export type ResolutionFormValues = z.infer<typeof resolutionSchema>

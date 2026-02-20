@@ -34,6 +34,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
         mode: "onChange"
     })
 
+    const [officials, setOfficials] = useState<string[]>([])
     const [orgSettings, setOrgSettings] = useState<{
         water_district_name?: string,
         address?: string,
@@ -95,6 +96,17 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     water_district_email: profile.water_district_email,
                     water_district_contact: profile.water_district_contact
                 })
+
+                const potentialMovants = [
+                    profile.bod_chairman,
+                    profile.bod_vice_chairman,
+                    profile.bod_secretary,
+                    profile.bod_member_1,
+                    profile.bod_member_2,
+                    profile.bod_member_3,
+                    profile.general_manager
+                ].filter((name): name is string => !!name && name.trim().length > 0)
+                setOfficials(potentialMovants)
 
                 if (form.getValues("signatories").length === 0) {
                     const newSignatories = []
@@ -221,7 +233,9 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                 approved_on: currentValues.approvedOn || null,
                 content: {
                     whereasClauses: currentValues.whereasClauses,
-                    resolvedClauses: currentValues.resolvedClauses
+                    resolvedClauses: currentValues.resolvedClauses,
+                    movant_name: currentValues.movant_name,
+                    seconder_name: currentValues.seconder_name
                 },
                 signatories: currentValues.signatories,
                 status: 'draft'
@@ -303,7 +317,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                 {/* Left Panel: Form */}
                 <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto p-8 scrollbar-thin no-print">
                     <div className="max-w-xl mx-auto">
-                        <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} />
+                        <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
                     </div>
                 </div>
 
