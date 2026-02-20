@@ -127,13 +127,13 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                     })}
                 </div>
 
-                <div className="mt-16 text-left">
-                    <p className="mb-8">
-                        Unanimously approved.
+                <div className="mt-16 text-left space-y-8">
+                    <p>
+                        {data.footer_approved_text || "Unanimously approved."}
                     </p>
                     {data.approvedOn && (
-                        <p className="mb-8">
-                            Adopted this {new Date(data.approvedOn).toLocaleDateString('en-US', { day: 'numeric' })}th day of {new Date(data.approvedOn).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} at {orgSettings?.address ? orgSettings.address.split(',').slice(-2).join(',').trim() : "_____________________"}.
+                        <p>
+                            {data.footer_adopted_text || `Adopted this ${new Date(data.approvedOn).toLocaleDateString('en-US', { day: 'numeric' })}th day of ${new Date(data.approvedOn).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} at ${orgSettings?.address ? orgSettings.address.split(',').slice(-2).join(',').trim() : "_____________________"}.`}
                         </p>
                     )}
 
@@ -141,7 +141,7 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                     {data.signatories && data.signatories.length > 0 ? (
                         <div className="mt-12 space-y-12 break-inside-avoid">
                             {/* 1. Chairman & Secretary (Top) usually certify */}
-                            <p className="mt-8 text-left">We hereby certify to the correctness of the foregoing resolution.</p>
+                            <p className="mt-8 text-left">{data.footer_certified_text || "We hereby certify to the correctness of the foregoing resolution."}</p>
 
                             {/* 2. Chairman centered */}
                             <div className="flex justify-center">

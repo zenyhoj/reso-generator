@@ -23,6 +23,9 @@ export const resolutionSchema = z.object({
     signatories: z.array(signerSchema).min(1, "At least one signatory is required"),
     movant_name: z.string().optional(),
     seconder_name: z.string().optional(),
+    footer_approved_text: z.string().optional(),
+    footer_adopted_text: z.string().optional(),
+    footer_certified_text: z.string().optional(),
 })
 
 export type ResolutionFormValues = z.infer<typeof resolutionSchema>

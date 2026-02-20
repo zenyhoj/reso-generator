@@ -268,6 +268,68 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                 <Separator />
 
                 <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Footer Settings</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="footer_approved_text"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Approved Text</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Unanimously approved."
+                                            className="resize-none min-h-[60px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>Defaults to "Unanimously approved." (leave blank for default)</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="footer_adopted_text"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Adopted Text</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Adopted this [Date] at [Location]."
+                                            className="resize-none min-h-[60px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>Use [Date] and [Location] as placeholders if needed, or leave blank for default.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="footer_certified_text"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Certification Text</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="We hereby certify to the correctness of the foregoing resolution."
+                                            className="resize-none min-h-[60px]"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>Defaults to standard certification text (leave blank for default)</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-lg font-medium">Signatories</h3>
                         <div className="flex gap-2">
