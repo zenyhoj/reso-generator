@@ -315,6 +315,13 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     <Button variant="outline" onClick={handlePrint} className="gap-2">
                         <Printer className="w-4 h-4" /> Print
                     </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => exportToDocx({ data: values, orgSettings })}
+                        className="gap-2"
+                    >
+                        <Download className="w-4 h-4" /> Export to Word
+                    </Button>
                     <Button className="gap-2" onClick={handleSave} disabled={isSaving || isGenerating}>
                         {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                         Save Draft
