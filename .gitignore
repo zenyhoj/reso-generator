@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# debug / one-off utility scripts (never commit to repo)
+debug-policies.ts
+debug-function.mjs
+apply-migration-draft.js
+check-models.js
+
 # vercel
 .vercel
 

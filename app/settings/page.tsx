@@ -82,7 +82,15 @@ export default function SettingsPage() {
 
                 let { data: profile, error } = await supabase
                     .from("profiles")
-                    .select("*")
+                    .select(`
+                        id, email, water_district_name, water_district_email,
+                        water_district_contact, address, logo_url,
+                        bod_chairman, bod_vice_chairman, bod_secretary,
+                        bod_member_1, bod_member_2, bod_member_3, general_manager,
+                        signature_url, bod_chairman_sig_url, bod_vice_chairman_sig_url,
+                        bod_secretary_sig_url, bod_member_1_sig_url, bod_member_2_sig_url,
+                        bod_member_3_sig_url, general_manager_sig_url
+                    `)
                     .eq("id", user.id)
                     .maybeSingle()
 
@@ -138,11 +146,33 @@ export default function SettingsPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // ─── Shared upload validation ────────────────────────────────────────────
+    const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
+    const MAX_FILE_SIZE_MB = 2
+
+    function validateImageFile(file: File): string | null {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            return 'Only PNG, JPEG, WEBP, or SVG images are allowed.'
+        }
+        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+            return `File must be smaller than ${MAX_FILE_SIZE_MB}MB.`
+        }
+        return null
+    }
+
     async function onUploadLogo(event: React.ChangeEvent<HTMLInputElement>) {
         if (!event.target.files || event.target.files.length === 0) return
         if (!user) return
 
         const file = event.target.files[0]
+
+        const validationError = validateImageFile(file)
+        if (validationError) {
+            toast.error(validationError)
+            event.target.value = '' // reset input
+            return
+        }
+
         const fileExt = file.name.split('.').pop()
         const fileName = `${user.id}-${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
@@ -165,7 +195,6 @@ export default function SettingsPage() {
             form.setValue("logo_url", publicUrl, { shouldDirty: true })
             toast.success("Logo uploaded successfully. Don't forget to save changes!")
         } catch (error: any) {
-            console.error("Error uploading logo:", error)
             toast.error("Failed to upload logo. Ensure 'logos' bucket exists and is public.")
         } finally {
             setSaving(false)
@@ -178,6 +207,15 @@ export default function SettingsPage() {
         if (!user) return
 
         const file = event.target.files[0]
+
+        // Validate file type and size before uploading
+        const validationError = validateImageFile(file)
+        if (validationError) {
+            toast.error(validationError)
+            event.target.value = '' // reset input
+            return
+        }
+
         const fileExt = file.name.split('.').pop()
         const fileName = `${user.id}-${field}-${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
@@ -185,7 +223,7 @@ export default function SettingsPage() {
         setSaving(true)
         try {
             const { error: uploadError } = await supabase.storage
-                .from('logos') // Reusing logos bucket
+                .from('logos')
                 .upload(filePath, file)
 
             if (uploadError) throw uploadError
@@ -197,7 +235,6 @@ export default function SettingsPage() {
             form.setValue(field, publicUrl, { shouldDirty: true })
             toast.success("Signature uploaded successfully!")
         } catch (error: any) {
-            console.error("Error uploading signature:", error)
             toast.error("Failed to upload signature.")
         } finally {
             setSaving(false)
