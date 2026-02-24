@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -54,29 +53,44 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
+        // 1. Get current user profile for fallback/secretariat info
         const { data: profile } = await supabase
             .from("profiles")
-            .select("*")
+            .select("full_name, signature_url")
             .eq("id", user.id)
-            .single()
+            .maybeSingle()
 
-        if (profile) {
-            const newSignatories = []
-            if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signatureUrl: profile.bod_chairman_sig_url })
-            if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signatureUrl: profile.bod_vice_chairman_sig_url })
-            if (profile.bod_secretary) {
-                newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signatureUrl: profile.bod_secretary_sig_url })
-            } else if (profile.full_name) {
-                newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signatureUrl: profile.signature_url })
+        // 2. Get official organization signatories
+        const { data: settings } = await supabase
+            .from("organization_settings")
+            .select("*")
+            .eq("id", 1)
+            .maybeSingle()
+
+        if (settings && settings.signatories) {
+            const orgSignatories = settings.signatories as any[]
+            const newSignatories = orgSignatories.map(s => ({
+                name: s.name,
+                position: s.position,
+                role: s.role,
+                signatureUrl: s.signature_url
+            }))
+
+            // Logic for Secretariat fallback
+            const hasSecretaryOrBacSec = newSignatories.some(s => s.role === 'secretary' || s.position.toLowerCase().includes('secretariat'))
+
+            if (!hasSecretaryOrBacSec && profile?.full_name) {
+                newSignatories.push({
+                    name: profile.full_name,
+                    position: "BAC Secretariat",
+                    role: "secretary",
+                    signatureUrl: profile.signature_url
+                })
             }
-            if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_1_sig_url })
-            if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_2_sig_url })
-            if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_3_sig_url })
-            if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signatureUrl: profile.general_manager_sig_url })
 
             if (newSignatories.length > 0) {
                 form.setValue("signatories", newSignatories as any)
-                toast.success("Signatories updated from settings!")
+                toast.success("Signatories updated from organization settings!")
             }
         }
     }
@@ -88,48 +102,41 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            const { data: profile } = await supabase
-                .from("profiles")
+            // 1. Fetch from normalized settings table
+            const { data: settings } = await supabase
+                .from("organization_settings")
                 .select("*")
-                .eq("id", user.id)
-                .single()
+                .eq("id", 1)
+                .maybeSingle()
 
-            if (profile) {
+            if (settings) {
                 setOrgSettings({
-                    water_district_name: profile.water_district_name,
-                    address: profile.address,
-                    logo_url: profile.logo_url,
-                    water_district_email: profile.water_district_email,
-                    water_district_contact: profile.water_district_contact
+                    water_district_name: settings.water_district_name,
+                    address: settings.address,
+                    logo_url: settings.logo_url,
+                    water_district_email: settings.water_district_email,
+                    water_district_contact: settings.water_district_contact
                 })
 
-                const potentialMovants = [
-                    profile.bod_chairman,
-                    profile.bod_vice_chairman,
-                    profile.bod_secretary,
-                    profile.bod_member_1,
-                    profile.bod_member_2,
-                    profile.bod_member_3,
-                    profile.general_manager
-                ].filter((name): name is string => !!name && name.trim().length > 0)
-                setOfficials(potentialMovants)
+                if (settings.signatories) {
+                    const orgSignatories = settings.signatories as any[]
+                    const potentialMovants = orgSignatories
+                        .map(s => s.name)
+                        .filter((name): name is string => !!name && name.trim().length > 0)
 
-                if (form.getValues("signatories").length === 0) {
-                    const newSignatories = []
-                    if (profile.bod_chairman) newSignatories.push({ name: profile.bod_chairman, position: "BOD Chairman", role: "chairman", signatureUrl: profile.bod_chairman_sig_url })
-                    if (profile.bod_vice_chairman) newSignatories.push({ name: profile.bod_vice_chairman, position: "BOD Vice-Chairman", role: "vice-chairman", signatureUrl: profile.bod_vice_chairman_sig_url })
-                    if (profile.bod_secretary) {
-                        newSignatories.push({ name: profile.bod_secretary, position: "BOD Secretary", role: "secretary", signatureUrl: profile.bod_secretary_sig_url })
-                    } else if (profile.full_name) {
-                        newSignatories.push({ name: profile.full_name, position: "BAC Secretariat", role: "secretary", signatureUrl: profile.signature_url })
-                    }
-                    if (profile.bod_member_1) newSignatories.push({ name: profile.bod_member_1, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_1_sig_url })
-                    if (profile.bod_member_2) newSignatories.push({ name: profile.bod_member_2, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_2_sig_url })
-                    if (profile.bod_member_3) newSignatories.push({ name: profile.bod_member_3, position: "BOD Member", role: "member", signatureUrl: profile.bod_member_3_sig_url })
-                    if (profile.general_manager) newSignatories.push({ name: profile.general_manager, position: "General Manager", role: "gm", signatureUrl: profile.general_manager_sig_url })
+                    setOfficials(potentialMovants)
 
-                    if (newSignatories.length > 0) {
-                        form.setValue("signatories", newSignatories as any)
+                    if (form.getValues("signatories").length === 0) {
+                        const newSignatories = orgSignatories.map(s => ({
+                            name: s.name,
+                            position: s.position,
+                            role: s.role,
+                            signatureUrl: s.signature_url
+                        }))
+
+                        if (newSignatories.length > 0) {
+                            form.setValue("signatories", newSignatories as any)
+                        }
                     }
                 }
             }

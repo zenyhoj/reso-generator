@@ -5,19 +5,15 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { FileText, Settings, LogOut } from "lucide-react"
-import { createClient } from "@/utils/supabase/client"
-import { useRouter } from "next/navigation"
+import { FileText, Settings, LogOut, Shield } from "lucide-react"
+import { signout } from "@/app/login/actions"
 
-export function MainNav() {
+interface MainNavProps {
+    role?: string
+}
+
+export function MainNav({ role }: MainNavProps) {
     const pathname = usePathname()
-    const router = useRouter()
-    const supabase = createClient()
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut()
-        router.push("/login")
-    }
 
     return (
         <header className="border-b bg-white dark:bg-slate-950 dark:border-slate-800">
@@ -30,26 +26,38 @@ export function MainNav() {
                         Resolutions
                     </Link>
 
-                    <nav className="flex items-center gap-4">
+                    <nav className="flex items-center gap-1">
                         <Link href="/dashboard">
                             <Button variant="ghost" className={cn("gap-2", pathname === "/dashboard" && "bg-slate-100 dark:bg-slate-800")}>
                                 <FileText className="w-4 h-4" />
                                 Dashboard
                             </Button>
                         </Link>
-                        <Link href="/settings">
-                            <Button variant="ghost" className={cn("gap-2", pathname === "/settings" && "bg-slate-100 dark:bg-slate-800")}>
-                                <Settings className="w-4 h-4" />
-                                Settings
-                            </Button>
-                        </Link>
+                        {(role === "admin" || role === "bod_secretary") && (
+                            <Link href="/settings">
+                                <Button variant="ghost" className={cn("gap-2", pathname === "/settings" && "bg-slate-100 dark:bg-slate-800")}>
+                                    <Settings className="w-4 h-4" />
+                                    Settings
+                                </Button>
+                            </Link>
+                        )}
+                        {role === "admin" && (
+                            <Link href="/admin">
+                                <Button variant="ghost" className={cn("gap-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50", pathname === "/admin" && "bg-purple-50 dark:bg-purple-900/20")}>
+                                    <Shield className="w-4 h-4" />
+                                    Admin
+                                </Button>
+                            </Link>
+                        )}
                     </nav>
                 </div>
 
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground gap-2">
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                </Button>
+                <form>
+                    <Button formAction={signout} variant="ghost" size="sm" className="text-muted-foreground gap-2">
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                    </Button>
+                </form>
             </div>
         </header>
     )

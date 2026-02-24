@@ -40,9 +40,11 @@ interface ResolutionCardProps {
         created_at: string
         status: string
     }
+    role?: string
 }
 
-export function ResolutionCard({ resolution }: ResolutionCardProps) {
+export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
+    const canDelete = role === 'admin' || role === 'bod_secretary'
     const router = useRouter()
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteInput, setDeleteInput] = useState("")
@@ -97,64 +99,66 @@ export function ResolutionCard({ resolution }: ResolutionCardProps) {
                 </CardContent>
             </Link>
 
-            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <AlertDialogTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the resolution
-                                <span className="font-medium text-foreground"> No. {resolution.resolution_number}-{resolution.series_year}</span>.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-
-                        <div className="py-4 space-y-2">
-                            <Label htmlFor="confirm-delete" className="text-sm font-medium">
-                                Type <span className="font-mono font-bold text-red-600">delete</span> to confirm
-                            </Label>
-                            <Input
-                                id="confirm-delete"
-                                value={deleteInput}
-                                onChange={(e) => setDeleteInput(e.target.value)}
-                                placeholder="Type delete to confirm"
-                                className="col-span-3"
-                                autoComplete="off"
-                            />
-                        </div>
-
-                        <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteInput("")}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={(e) => {
-                                    e.preventDefault()
-                                    handleDelete()
-                                }}
-                                disabled={deleteInput.toLowerCase() !== "delete" || isDeleting}
-                                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            {canDelete && (
+                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                                onClick={(e) => e.stopPropagation()}
                             >
-                                {isDeleting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    "Delete Resolution"
-                                )}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the resolution
+                                    <span className="font-medium text-foreground"> No. {resolution.resolution_number}-{resolution.series_year}</span>.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+
+                            <div className="py-4 space-y-2">
+                                <Label htmlFor="confirm-delete" className="text-sm font-medium">
+                                    Type <span className="font-mono font-bold text-red-600">delete</span> to confirm
+                                </Label>
+                                <Input
+                                    id="confirm-delete"
+                                    value={deleteInput}
+                                    onChange={(e) => setDeleteInput(e.target.value)}
+                                    placeholder="Type delete to confirm"
+                                    className="col-span-3"
+                                    autoComplete="off"
+                                />
+                            </div>
+
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setDeleteInput("")}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        handleDelete()
+                                    }}
+                                    disabled={deleteInput.toLowerCase() !== "delete" || isDeleting}
+                                    className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        "Delete Resolution"
+                                    )}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
         </Card>
     )
 }

@@ -13,6 +13,17 @@ export default async function EditResolutionPage({ params }: { params: Promise<{
         redirect('/login')
     }
 
+    // Role guard: bod_member cannot edit — send to review view
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+    if (!profile || profile.role === 'bod_member') {
+        redirect(`/resolutions/${id}/view`)
+    }
+
     const { data: resolution, error } = await supabase
         .from('resolutions')
         .select('*')

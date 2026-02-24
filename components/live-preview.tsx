@@ -161,15 +161,17 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                             {data.signatories.filter(s => s?.role === 'chairman').map((signer, i) => (
                                 <div key={i} className="text-center flex flex-col items-center relative">
                                     <div className="mt-4 relative flex flex-col items-center">
-                                        {signer.signature && (
+                                        {(signer.signature || signer.signatureUrl) && (
                                             /* eslint-disable-next-line @next/next/no-img-element */
                                             <img
-                                                src={signer.signature}
+                                                src={signer.signature || signer.signatureUrl}
                                                 alt="Signature"
                                                 className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
                                             />
                                         )}
-                                        <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">{signer.name}</p>
+                                        <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">
+                                            {signer.role !== 'gm' && !signer.name.toUpperCase().startsWith('DIR.') ? `DIR. ${signer.name}` : signer.name}
+                                        </p>
                                         <p className="text-sm italic">{signer.position}</p>
                                     </div>
                                 </div>
@@ -187,15 +189,17 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                                 .map((signer, i) => (
                                     <div key={i} className="text-center flex flex-col items-center relative">
                                         <div className={`${signer.role === 'secretary' ? '' : 'mt-auto'} relative flex flex-col items-center`}>
-                                            {signer.signature && (
+                                            {(signer.signature || signer.signatureUrl) && (
                                                 /* eslint-disable-next-line @next/next/no-img-element */
                                                 <img
-                                                    src={signer.signature}
+                                                    src={signer.signature || signer.signatureUrl}
                                                     alt="Signature"
                                                     className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
                                                 />
                                             )}
-                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">{signer.name}</p>
+                                            <p className="font-bold uppercase tracking-wide border-b border-black inline-block min-w-[250px] mb-1 relative z-0">
+                                                {signer.role !== 'gm' && !signer.name.toUpperCase().startsWith('DIR.') ? `DIR. ${signer.name}` : signer.name}
+                                            </p>
                                             <p className="text-sm italic">{signer.position}</p>
                                         </div>
                                     </div>
@@ -208,10 +212,10 @@ export function LivePreview({ data, orgSettings }: LivePreviewProps) {
                                 <div key={i} className="text-center flex flex-col items-center relative">
                                     <p className="mb-4 text-center">Concurred:</p>
                                     <div className="mt-4 relative flex flex-col items-center">
-                                        {signer.signature && (
+                                        {(signer.signature || signer.signatureUrl) && (
                                             /* eslint-disable-next-line @next/next/no-img-element */
                                             <img
-                                                src={signer.signature}
+                                                src={signer.signature || signer.signatureUrl}
                                                 alt="Signature"
                                                 className="absolute -top-12 h-16 object-contain pointer-events-none z-10"
                                             />

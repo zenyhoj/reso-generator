@@ -11,6 +11,16 @@ export default async function NewResolutionPage() {
         redirect('/login')
     }
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, status')
+        .eq('id', user.id)
+        .maybeSingle()
+
+    if (!profile || profile.role === 'bod_member') {
+        redirect('/dashboard')
+    }
+
     return (
         <div className="fixed inset-0 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-hidden">

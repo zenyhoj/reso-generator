@@ -3,8 +3,9 @@ export interface Profile {
     id: string
     email: string
     full_name?: string
-    water_district_name: string
-    role: 'admin' | 'editor' | 'viewer'
+    bod_position?: string
+    role: 'admin' | 'bod_secretary' | 'bod_member'
+    status: 'pending' | 'approved'
 }
 
 export interface Resolution {

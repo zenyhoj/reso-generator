@@ -4,8 +4,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ResolutionCard } from '@/components/resolution-card'
-import { Plus, FileText, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Plus, FileText } from 'lucide-react'
 import { MainNav } from '@/components/main-nav'
 import { SearchInput } from '@/components/search-input'
 
@@ -19,6 +18,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         redirect('/login')
     }
 
+    // Fetch profile for role-based UI
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, status')
+        .eq('id', user.id)
+        .maybeSingle()
+
+    const role = profile?.role ?? 'bod_member'
+    const canCreate = role === 'admin' || role === 'bod_secretary'
+
     // Fetch resolutions
     let queryBuilder = supabase
         .from('resolutions')
@@ -30,22 +39,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         queryBuilder = queryBuilder.or(`title.ilike.%${query}%,resolution_number.ilike.%${query}%`)
     }
 
-    const { data: resolutions, error } = await queryBuilder
+    const { data: resolutions } = await queryBuilder
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-            <MainNav />
+            <MainNav role={role} />
             <div className="container mx-auto py-10 px-4">
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-serif font-bold tracking-tight">Resolutions</h1>
                         <p className="text-muted-foreground">Manage your board resolutions.</p>
                     </div>
-                    <Link href="/resolutions/new">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" /> Create New
-                        </Button>
-                    </Link>
+                    {canCreate && (
+                        <Link href="/resolutions/new">
+                            <Button>
+                                <Plus className="mr-2 h-4 w-4" /> Create New
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 <div className="flex items-center space-x-2 mb-6">
@@ -55,7 +66,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {resolutions && resolutions.length > 0 ? (
                         resolutions.map((res: any) => (
-                            <ResolutionCard key={res.id} resolution={res} />
+                            <ResolutionCard key={res.id} resolution={res} role={role} />
                         ))
                     ) : (
                         <div className="col-span-full text-center py-12 border rounded-lg bg-slate-50 border-dashed">
@@ -63,10 +74,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                 <FileText className="h-6 w-6 text-slate-400" />
                             </div>
                             <h3 className="text-lg font-semibold">No resolutions found</h3>
-                            <p className="text-muted-foreground mb-4">Get started by creating your first board resolution.</p>
-                            <Link href="/resolutions/new">
-                                <Button variant="outline">Create Resolution</Button>
-                            </Link>
+                            <p className="text-muted-foreground mb-4">
+                                {canCreate
+                                    ? 'Get started by creating your first board resolution.'
+                                    : 'No resolutions have been shared with you yet.'}
+                            </p>
+                            {canCreate && (
+                                <Link href="/resolutions/new">
+                                    <Button variant="outline">Create Resolution</Button>
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

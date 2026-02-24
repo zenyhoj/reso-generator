@@ -42,6 +42,31 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
         }
     }
 
+    // Attempt to fetch all signature images
+    const signatureImages: Record<number, ImageRun> = {};
+    if (data.signatories && data.signatories.length > 0) {
+        await Promise.all(data.signatories.map(async (signer, index) => {
+            if (signer.signatureUrl) {
+                try {
+                    const response = await fetch(signer.signatureUrl);
+                    const blob = await response.blob();
+                    const arrayBuffer = await blob.arrayBuffer();
+                    signatureImages[index] = new ImageRun({
+                        data: new Uint8Array(arrayBuffer),
+                        transformation: {
+                            width: 120,
+                            height: 60,
+                        },
+                        // @ts-ignore
+                        type: "png",
+                    });
+                } catch (e) {
+                    console.error(`Failed to load signature for ${signer.name}:`, e);
+                }
+            }
+        }));
+    }
+
     const doc = new Document({
         sections: [
             {
@@ -250,7 +275,7 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                         })
                     ] : []),
 
-                    // Signatories - Simplified for Docx (Vertical stack or basic grid)
+                    // Signatories Certified Text
                     new Paragraph({
                         children: [
                             new TextRun({
@@ -272,7 +297,7 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                             insideHorizontal: { style: BorderStyle.NONE },
                             insideVertical: { style: BorderStyle.NONE },
                         },
-                        rows: createSignatoryRows(data.signatories),
+                        rows: createSignatoryRows(data.signatories, signatureImages),
                     }),
                 ],
             },
@@ -283,89 +308,115 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
     saveAs(blob, `Resolution-${data.resolutionNumber || "Draft"}.docx`);
 }
 
-function createSignatoryRows(signatories: any[]) {
+function createSignatoryRows(signatories: any[], signatureImages: Record<number, ImageRun>) {
     const rows: TableRow[] = [];
 
     // Chairman Centered Row
-    const chairman = signatories.find(s => s.role === 'chairman');
-    if (chairman) {
+    const chairmanIndex = signatories.findIndex(s => s.role === 'chairman');
+    if (chairmanIndex !== -1) {
+        const chairman = signatories[chairmanIndex];
+        const chairmanName = chairman.role !== 'gm' && !chairman.name.toUpperCase().startsWith('DIR.') ? `DIR. ${chairman.name}` : chairman.name;
+
+        const cellChildren = [];
+        if (signatureImages[chairmanIndex]) {
+            cellChildren.push(new Paragraph({ children: [signatureImages[chairmanIndex]], alignment: AlignmentType.CENTER }));
+        }
+        cellChildren.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+                new TextRun({ text: chairmanName, bold: true, allCaps: true, font: "Georgia", underline: {} }),
+                new TextRun({ text: `\n${chairman.position}`, italics: true, size: 18, font: "Georgia" }),
+            ],
+            spacing: { before: signatureImages[chairmanIndex] ? 0 : 400, after: 600 }
+        }));
+
         rows.push(new TableRow({
             children: [
                 new TableCell({
                     columnSpan: 2,
-                    children: [
-                        new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            children: [
-                                new TextRun({ text: chairman.name, bold: true, allCaps: true, font: "Georgia", underline: {} }),
-                                new TextRun({ text: `\n${chairman.position}`, italics: true, size: 18, font: "Georgia" }),
-                            ],
-                            spacing: { before: 400, after: 600 }
-                        })
-                    ]
+                    children: cellChildren
                 })
             ]
         }));
     }
 
     // Others in 2-column grid
-    const others = signatories.filter(s => ['member', 'vice-chairman', 'secretary'].includes(s.role));
-    for (let i = 0; i < others.length; i += 2) {
-        const left = others[i];
-        const right = others[i + 1];
+    const remainingIndices = signatories
+        .map((s, i) => ({ s, i }))
+        .filter(item => ['member', 'vice-chairman', 'secretary'].includes(item.s.role));
+
+    for (let i = 0; i < remainingIndices.length; i += 2) {
+        const leftItem = remainingIndices[i];
+        const rightItem = remainingIndices[i + 1];
+
+        const leftChildren = [];
+        if (signatureImages[leftItem.i]) {
+            leftChildren.push(new Paragraph({ children: [signatureImages[leftItem.i]], alignment: AlignmentType.CENTER }));
+        }
+        const leftName = leftItem.s.role !== 'gm' && !leftItem.s.name.toUpperCase().startsWith('DIR.') ? `DIR. ${leftItem.s.name}` : leftItem.s.name;
+        leftChildren.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+                new TextRun({ text: leftName, bold: true, allCaps: true, font: "Georgia", underline: {} }),
+                new TextRun({ text: `\n${leftItem.s.position}`, italics: true, size: 18, font: "Georgia" }),
+            ],
+            spacing: { before: signatureImages[leftItem.i] ? 0 : 200, after: 400 }
+        }));
+
+        const rightChildren = [];
+        if (rightItem) {
+            if (signatureImages[rightItem.i]) {
+                rightChildren.push(new Paragraph({ children: [signatureImages[rightItem.i]], alignment: AlignmentType.CENTER }));
+            }
+            const rightName = rightItem.s.role !== 'gm' && !rightItem.s.name.toUpperCase().startsWith('DIR.') ? `DIR. ${rightItem.s.name}` : rightItem.s.name;
+            rightChildren.push(new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                    new TextRun({ text: rightName, bold: true, allCaps: true, font: "Georgia", underline: {} }),
+                    new TextRun({ text: `\n${rightItem.s.position}`, italics: true, size: 18, font: "Georgia" }),
+                ],
+                spacing: { before: signatureImages[rightItem.i] ? 0 : 200, after: 400 }
+            }));
+        }
 
         rows.push(new TableRow({
             children: [
-                new TableCell({
-                    children: [
-                        new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            children: [
-                                new TextRun({ text: left.name, bold: true, allCaps: true, font: "Georgia", underline: {} }),
-                                new TextRun({ text: `\n${left.position}`, italics: true, size: 18, font: "Georgia" }),
-                            ],
-                            spacing: { before: 200, after: 400 }
-                        })
-                    ]
-                }),
-                new TableCell({
-                    children: right ? [
-                        new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            children: [
-                                new TextRun({ text: right.name, bold: true, allCaps: true, font: "Georgia", underline: {} }),
-                                new TextRun({ text: `\n${right.position}`, italics: true, size: 18, font: "Georgia" }),
-                            ],
-                            spacing: { before: 200, after: 400 }
-                        })
-                    ] : []
-                })
+                new TableCell({ children: leftChildren }),
+                new TableCell({ children: rightChildren })
             ]
         }));
     }
 
     // GM Concurred
-    const gm = signatories.find(s => s.role === 'gm');
-    if (gm) {
+    const gmIndex = signatories.findIndex(s => s.role === 'gm');
+    if (gmIndex !== -1) {
+        const gm = signatories[gmIndex];
+        const gmChildren = [
+            new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [new TextRun({ text: "Concurred:", font: "Georgia" })],
+                spacing: { before: 400 }
+            })
+        ];
+
+        if (signatureImages[gmIndex]) {
+            gmChildren.push(new Paragraph({ children: [signatureImages[gmIndex]], alignment: AlignmentType.CENTER }));
+        }
+
+        gmChildren.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+                new TextRun({ text: gm.name, bold: true, allCaps: true, font: "Georgia", underline: {} }),
+                new TextRun({ text: `\n${gm.position}`, italics: true, size: 18, font: "Georgia" }),
+            ],
+            spacing: { before: signatureImages[gmIndex] ? 0 : 200, after: 400 }
+        }));
+
         rows.push(new TableRow({
             children: [
                 new TableCell({
                     columnSpan: 2,
-                    children: [
-                        new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            children: [new TextRun({ text: "Concurred:", font: "Georgia" })],
-                            spacing: { before: 400 }
-                        }),
-                        new Paragraph({
-                            alignment: AlignmentType.CENTER,
-                            children: [
-                                new TextRun({ text: gm.name, bold: true, allCaps: true, font: "Georgia", underline: {} }),
-                                new TextRun({ text: `\n${gm.position}`, italics: true, size: 18, font: "Georgia" }),
-                            ],
-                            spacing: { before: 200, after: 400 }
-                        })
-                    ]
+                    children: gmChildren
                 })
             ]
         }));
