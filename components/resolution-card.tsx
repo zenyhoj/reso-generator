@@ -37,6 +37,7 @@ interface ResolutionCardProps {
         series_year: number
         title: string
         description?: string | null
+        content?: any
         created_at: string
         status: string
     }
@@ -49,6 +50,20 @@ export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteInput, setDeleteInput] = useState("")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+    // Compute a fallback description if none is explicitly provided
+    let displayDescription = resolution.description;
+    if (!displayDescription && resolution.content) {
+        if (resolution.content.resolvedClauses && resolution.content.resolvedClauses.length > 0) {
+            const firstResolved = resolution.content.resolvedClauses[0];
+            // Remove the leading "RESOLVED, " or "RESOLVED FURTHER, " for a cleaner summary
+            displayDescription = firstResolved.replace(/^(RESOLVED(?: FURTHER)?,\s*(?:that )?)/i, '');
+        } else if (resolution.content.whereasClauses && resolution.content.whereasClauses.length > 0) {
+            const firstWhereas = resolution.content.whereasClauses[0];
+            // Remove the leading "WHEREAS, "
+            displayDescription = firstWhereas.replace(/^(WHEREAS,\s*)/i, '');
+        }
+    }
 
     const handleDelete = async () => {
         if (deleteInput.toLowerCase() !== "delete") return
@@ -77,24 +92,38 @@ export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
     }
 
     return (
-        <Card className="hover:bg-accent/50 transition-colors group relative flex flex-col h-full">
-            <Link href={`/resolutions/${resolution.id}`} className="flex-1">
-                <CardHeader>
-                    <CardTitle className="font-serif text-lg leading-tight line-clamp-2 pr-8">
-                        Res. No. {resolution.resolution_number}-Series of {resolution.series_year}: {resolution.title}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-3">
-                        {resolution.description || "No description provided."}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                        <FileText className="mr-1 h-3 w-3" />
-                        {new Date(resolution.created_at).toLocaleDateString()}
-                        <span className={`ml-auto px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${resolution.status === 'final' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
-                            }`}>
+        <Card className="hover:bg-accent/50 hover:shadow-md transition-all duration-200 group relative flex flex-col h-full border-slate-200 dark:border-slate-800">
+            <Link href={`/resolutions/${resolution.id}`} className="flex-1 flex flex-col">
+                <CardHeader className="pb-3 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-2 pr-8">
+                        <span className="text-[11px] font-semibold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md dark:bg-slate-800 dark:text-slate-300">
+                            Res. {resolution.resolution_number}-{resolution.series_year}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-md text-[9px] uppercase font-bold tracking-wider ${resolution.status === 'final' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'}`}>
                             {resolution.status}
                         </span>
+                    </div>
+                    <CardTitle className="font-serif text-lg leading-snug group-hover:text-primary transition-colors pr-8">
+                        {resolution.title}
+                    </CardTitle>
+                    {displayDescription ? (
+                        <CardDescription className="line-clamp-2 text-sm mt-1.5 leading-relaxed">
+                            {displayDescription}
+                        </CardDescription>
+                    ) : (
+                        <CardDescription className="italic text-sm mt-1.5 opacity-60">
+                            No description provided.
+                        </CardDescription>
+                    )}
+                </CardHeader>
+                <CardContent className="pt-0 mt-auto">
+                    <div className="flex items-center text-xs text-muted-foreground pt-3 border-t">
+                        <FileText className="mr-1.5 h-3.5 w-3.5 text-slate-400" />
+                        {new Date(resolution.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        })}
                     </div>
                 </CardContent>
             </Link>
