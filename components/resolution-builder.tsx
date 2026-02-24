@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { exportToDocx } from "@/utils/export-docx"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { Sparkles, Save, Printer, Loader2, Download } from "lucide-react"
+import { Sparkles, Save, Printer, Loader2, Download, Eye } from "lucide-react"
 import Link from 'next/link'
 
 interface ResolutionBuilderProps {
@@ -309,6 +309,13 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 no-print">
+                    {resolutionId && (
+                        <Link href={`/resolutions/${resolutionId}/view`}>
+                            <Button variant="outline" className="gap-2">
+                                <Eye className="w-4 h-4" /> Review View
+                            </Button>
+                        </Link>
+                    )}
                     <Button variant="outline" onClick={() => setShowAiDialog(true)} className="gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50">
                         <Sparkles className="w-4 h-4" /> Generate with AI
                     </Button>
