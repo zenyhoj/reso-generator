@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Send, Check, X, Trash2 } from "lucide-react"
+import { ArrowLeft, Send, Check, X, Trash2, ShieldCheck, FileUp, Download, Loader2 } from "lucide-react"
 
 interface ResolutionReviewClientProps {
     resolutionId: string
@@ -25,6 +25,7 @@ interface ResolutionReviewClientProps {
         water_district_email?: string
         water_district_contact?: string
     }
+    signedPdfUrl?: string | null
 }
 
 interface Proposal {
@@ -50,6 +51,7 @@ export function ResolutionReviewClient({
     canManage,
     initialData,
     orgSettings,
+    signedPdfUrl,
 }: ResolutionReviewClientProps) {
     const [suggestions, setSuggestions] = useState<Record<string, string>>({})
     const [notes, setNotes] = useState<Record<string, string>>({})
@@ -57,6 +59,10 @@ export function ResolutionReviewClient({
     const [proposals, setProposals] = useState<Proposal[]>([])
     const [currentUserId, setCurrentUserId] = useState<string | null>(null)
     const [actingId, setActingId] = useState<string | null>(null)
+
+    // Digital Signature States
+    const [isUploadingSignature, setIsUploadingSignature] = useState(false)
+    const [currentSignedPdf, setCurrentSignedPdf] = useState<string | null>(signedPdfUrl || null)
 
     const isFinal = resolutionStatus === "final"
 
@@ -199,6 +205,51 @@ export function ResolutionReviewClient({
         rejected: "destructive",
     }
 
+    const handleSignedPdfUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        if (file.type !== "application/pdf") {
+            toast.error("Please upload a PDF file.")
+            return
+        }
+
+        setIsUploadingSignature(true)
+        const toastId = toast.loading("Uploading signed resolution...")
+
+        try {
+            const supabase = createClient()
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${resolutionId}-${Date.now()}.${fileExt}`
+            const filePath = `${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('signed-resolutions')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('signed-resolutions')
+                .getPublicUrl(filePath)
+
+            const { error: updateError } = await supabase
+                .from('resolutions')
+                .update({ signed_pdf_url: publicUrl })
+                .eq('id', resolutionId)
+
+            if (updateError) throw updateError
+
+            setCurrentSignedPdf(publicUrl)
+            toast.success("Signed resolution uploaded successfully!", { id: toastId })
+        } catch (error: any) {
+            console.error("Upload failed", error)
+            toast.error(`Upload failed: ${error.message}`, { id: toastId })
+        } finally {
+            setIsUploadingSignature(false)
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -238,6 +289,79 @@ export function ResolutionReviewClient({
                 </div>
 
                 <div className="space-y-4">
+                    {/* Digital Signature Management */}
+                    {(canManage || isFinal) && (
+                        <Card className="border-indigo-100 bg-indigo-50/30 dark:border-indigo-900/50 dark:bg-indigo-900/10">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                                    <CardTitle className="text-base text-indigo-900 dark:text-indigo-200">Digital Signature Workflow</CardTitle>
+                                </div>
+                                <CardDescription>
+                                    Download the unsigned PDF, sign it locally using your DICT .p12 certificate in Adobe Acrobat, and upload the signed version back here.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {currentSignedPdf ? (
+                                    <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-md border border-green-200 dark:border-green-900">
+                                        <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-500 font-medium">
+                                            <Check className="w-4 h-4" /> Signed PDF Uploaded
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Button variant="outline" size="sm" asChild>
+                                                <a href={currentSignedPdf} target="_blank" rel="noopener noreferrer">
+                                                    View Signed PDF
+                                                </a>
+                                            </Button>
+                                            {canManage && (
+                                                <div className="relative">
+                                                    <Button variant="ghost" size="sm" disabled={isUploadingSignature} className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+                                                        {isUploadingSignature ? <Loader2 className="w-4 h-4 animate-spin" /> : "Re-upload"}
+                                                    </Button>
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf"
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        onChange={handleSignedPdfUpload}
+                                                        disabled={isUploadingSignature}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-md border border-amber-200 dark:border-amber-900">
+                                            <span className="text-sm font-medium text-amber-700 dark:text-amber-500">
+                                                No signed PDF uploaded yet.
+                                            </span>
+                                        </div>
+                                        {canManage && (
+                                            <div className="flex gap-2 w-full">
+                                                <Button variant="outline" onClick={() => window.print()} className="flex-1 gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                                                    <Download className="w-4 h-4" /> 1. Download Unsigned PDF
+                                                </Button>
+                                                <div className="relative flex-1">
+                                                    <Button className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700" disabled={isUploadingSignature}>
+                                                        {isUploadingSignature ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
+                                                        2. Upload Signed PDF
+                                                    </Button>
+                                                    <input
+                                                        type="file"
+                                                        accept=".pdf"
+                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                        onChange={handleSignedPdfUpload}
+                                                        disabled={isUploadingSignature}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Suggestion forms — hidden for owners/collaborators and for finalised resolutions */}
                     {!canManage && !isFinal && clauses.map((clause) => {
                         const key = proposalKey(clause.section, clause.index)

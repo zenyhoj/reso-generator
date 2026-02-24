@@ -108,6 +108,7 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
                     canManage={canManage}
                     initialData={initialData}
                     orgSettings={ownerOrgSettings}
+                    signedPdfUrl={resolution.signed_pdf_url}
                 />
             </div>
         </div>
