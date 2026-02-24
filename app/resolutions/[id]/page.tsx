@@ -28,7 +28,6 @@ export default async function EditResolutionPage({ params }: { params: Promise<{
         .from('resolutions')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
         .single()
 
     if (error || !resolution) {

@@ -16,6 +16,7 @@ interface ResolutionReviewClientProps {
     resolutionId: string
     resolutionStatus: string
     isOwner: boolean
+    canManage: boolean
     initialData: ResolutionFormValues
     orgSettings?: {
         water_district_name?: string
@@ -46,6 +47,7 @@ export function ResolutionReviewClient({
     resolutionId,
     resolutionStatus,
     isOwner,
+    canManage,
     initialData,
     orgSettings,
 }: ResolutionReviewClientProps) {
@@ -216,6 +218,11 @@ export function ResolutionReviewClient({
                                 Owner
                             </Badge>
                         )}
+                        {canManage && !isOwner && (
+                            <Badge variant="outline" className="text-emerald-600 border-emerald-300">
+                                Collaborator
+                            </Badge>
+                        )}
                     </div>
                 </div>
                 <Link href="/dashboard">
@@ -231,8 +238,8 @@ export function ResolutionReviewClient({
                 </div>
 
                 <div className="space-y-4">
-                    {/* Suggestion forms — hidden for owners and for finalised resolutions */}
-                    {!isOwner && !isFinal && clauses.map((clause) => {
+                    {/* Suggestion forms — hidden for owners/collaborators and for finalised resolutions */}
+                    {!canManage && !isFinal && clauses.map((clause) => {
                         const key = proposalKey(clause.section, clause.index)
                         return (
                             <Card key={key}>
@@ -281,9 +288,9 @@ export function ResolutionReviewClient({
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">
-                                    {isOwner ? "Wording Suggestions" : "Submitted Suggestions"}
+                                    {canManage ? "Wording Suggestions" : "Submitted Suggestions"}
                                 </CardTitle>
-                                {isOwner && (
+                                {canManage && (
                                     <CardDescription>
                                         Review and accept or reject each suggestion below.
                                     </CardDescription>
@@ -309,8 +316,8 @@ export function ResolutionReviewClient({
                                             </p>
                                         )}
 
-                                        {/* Owner: accept / reject */}
-                                        {isOwner && proposal.status === "pending" && (
+                                        {/* Managers: accept / reject */}
+                                        {canManage && proposal.status === "pending" && (
                                             <div className="flex gap-2 pt-1">
                                                 <Button
                                                     size="sm"
@@ -334,7 +341,7 @@ export function ResolutionReviewClient({
                                         )}
 
                                         {/* Submitter: retract their own pending proposal */}
-                                        {!isOwner &&
+                                        {!canManage &&
                                             proposal.status === "pending" &&
                                             proposal.user_id === currentUserId && (
                                                 <Button
@@ -353,7 +360,7 @@ export function ResolutionReviewClient({
                         </Card>
                     )}
 
-                    {proposals.length === 0 && (isOwner || isFinal) && (
+                    {proposals.length === 0 && (canManage || isFinal) && (
                         <p className="text-sm text-muted-foreground text-center py-8">
                             No suggestions have been submitted yet.
                         </p>

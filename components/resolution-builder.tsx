@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { exportToDocx } from "@/utils/export-docx"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { Sparkles, Save, Printer, Loader2, Download, Eye } from "lucide-react"
+import { Sparkles, Save, Printer, Loader2, Download, Eye, MessageSquare } from "lucide-react"
 import Link from 'next/link'
 
 interface ResolutionBuilderProps {
@@ -40,6 +40,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
     })
 
     const [officials, setOfficials] = useState<string[]>([])
+    const [proposals, setProposals] = useState<any[]>([])
     const [orgSettings, setOrgSettings] = useState<{
         water_district_name?: string,
         address?: string,
@@ -47,6 +48,25 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
         water_district_email?: string,
         water_district_contact?: string
     }>({})
+
+    // Fetch Proposals
+    useEffect(() => {
+        if (!initialData?.id) return
+        async function fetchProposals() {
+            const supabase = createClient()
+            const { data } = await supabase
+                .from('resolution_wording_proposals')
+                .select('*, profiles(full_name)')
+                .eq('resolution_id', initialData?.id)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+
+            if (data) {
+                setProposals(data)
+            }
+        }
+        fetchProposals()
+    }, [initialData?.id])
 
     const handleSyncSignatories = async () => {
         const supabase = createClient()
@@ -318,8 +338,13 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
                 <div className="flex items-center gap-2 no-print">
                     {resolutionId && (
                         <Link href={`/resolutions/${resolutionId}/view`}>
-                            <Button variant="outline" className="gap-2">
+                            <Button variant="outline" className="gap-2 relative">
                                 <Eye className="w-4 h-4" /> Review View
+                                {proposals.length > 0 && (
+                                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white shadow">
+                                        {proposals.length}
+                                    </span>
+                                )}
                             </Button>
                         </Link>
                     )}
@@ -346,7 +371,7 @@ export function ResolutionBuilder({ initialData }: ResolutionBuilderProps) {
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Panel: Form */}
                 <div className="w-1/2 border-r dark:border-slate-800 bg-white dark:bg-slate-950 overflow-y-auto px-8 py-6 scrollbar-thin no-print print:hidden">
-                    <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} />
+                    <ResolutionForm form={form} onSyncSignatories={handleSyncSignatories} officials={officials} proposals={proposals} />
                 </div>
 
                 <div className="preview-panel flex-1 bg-slate-200 dark:bg-slate-800 overflow-y-auto p-12 flex justify-center scrollbar-thin print:bg-white print:p-0 print:m-0 print:overflow-visible print:w-full print:block">

@@ -17,9 +17,10 @@ interface ResolutionFormProps {
     form: UseFormReturn<ResolutionFormValues>
     onSyncSignatories?: () => void
     officials?: string[]
+    proposals?: any[]
 }
 
-export function ResolutionForm({ form, onSyncSignatories, officials = [] }: ResolutionFormProps) {
+export function ResolutionForm({ form, onSyncSignatories, officials = [], proposals = [] }: ResolutionFormProps) {
     const { fields: whereasFields, append: appendWhereas, remove: removeWhereas, move: moveWhereas } = useFieldArray({
         control: form.control,
         name: "whereasClauses" as any,
@@ -172,6 +173,23 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                                         <FormControl>
                                             <Textarea className="min-h-[60px]" placeholder={`WHEREAS, ...`} {...field} />
                                         </FormControl>
+
+                                        {proposals?.filter(p => p.section === 'whereas' && p.clause_index === index).map(p => (
+                                            <div key={p.id} className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm">
+                                                <div className="font-semibold text-amber-800 mb-2 flex justify-between items-center">
+                                                    <span>Suggestion from {p.profiles?.full_name || 'Collaborator'}</span>
+                                                    <Button
+                                                        type="button" variant="outline" size="sm"
+                                                        className="h-7 text-xs bg-white text-amber-700 border-amber-300 hover:bg-amber-100"
+                                                        onClick={() => form.setValue(`whereasClauses.${index}` as any, p.suggested_text, { shouldDirty: true })}
+                                                    >
+                                                        Apply Text
+                                                    </Button>
+                                                </div>
+                                                <div className="text-amber-900 mb-1">{p.suggested_text}</div>
+                                                {p.note && <div className="text-amber-700 text-xs italic">Note: {p.note}</div>}
+                                            </div>
+                                        ))}
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -219,6 +237,23 @@ export function ResolutionForm({ form, onSyncSignatories, officials = [] }: Reso
                                         <FormControl>
                                             <Textarea className="min-h-[60px]" placeholder={`RESOLVED, as it is hereby resolved...`} {...field} />
                                         </FormControl>
+
+                                        {proposals?.filter(p => p.section === 'resolved' && p.clause_index === index).map(p => (
+                                            <div key={p.id} className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-sm">
+                                                <div className="font-semibold text-amber-800 mb-2 flex justify-between items-center">
+                                                    <span>Suggestion from {p.profiles?.full_name || 'Collaborator'}</span>
+                                                    <Button
+                                                        type="button" variant="outline" size="sm"
+                                                        className="h-7 text-xs bg-white text-amber-700 border-amber-300 hover:bg-amber-100"
+                                                        onClick={() => form.setValue(`resolvedClauses.${index}` as any, p.suggested_text, { shouldDirty: true })}
+                                                    >
+                                                        Apply Text
+                                                    </Button>
+                                                </div>
+                                                <div className="text-amber-900 mb-1">{p.suggested_text}</div>
+                                                {p.note && <div className="text-amber-700 text-xs italic">Note: {p.note}</div>}
+                                            </div>
+                                        ))}
                                         <FormMessage />
                                     </FormItem>
                                 )}

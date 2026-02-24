@@ -39,6 +39,8 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
 
     const isOwner = resolution.user_id === user.id
     const isAdmin = currentProfile?.role === 'admin'
+    const isSecretary = currentProfile?.role === 'bod_secretary'
+    const canManage = isOwner || isAdmin || isSecretary
 
     let isOfficerReviewer = false
     let ownerOrgSettings: any = {}
@@ -72,7 +74,7 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
         isOfficerReviewer = isSameDistrict && Boolean(reviewerName) && officerNames.includes(reviewerName)
     }
 
-    if (!isOwner && !isAdmin && !isOfficerReviewer) {
+    if (!canManage && !isOfficerReviewer) {
         redirect('/dashboard')
     }
 
@@ -103,6 +105,7 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
                     resolutionId={resolution.id}
                     resolutionStatus={resolution.status}
                     isOwner={isOwner}
+                    canManage={canManage}
                     initialData={initialData}
                     orgSettings={ownerOrgSettings}
                 />

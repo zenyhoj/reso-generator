@@ -32,7 +32,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     let queryBuilder = supabase
         .from('resolutions')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
     if (query) {
