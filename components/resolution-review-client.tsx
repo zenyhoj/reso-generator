@@ -251,8 +251,8 @@ export function ResolutionReviewClient({
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-start justify-between gap-4">
+        <div className="space-y-6 print:space-y-0">
+            <div className="flex items-start justify-between gap-4 print:hidden">
                 <div>
                     <h1 className="text-2xl font-serif font-bold tracking-tight">Review Draft Resolution</h1>
                     <p className="text-muted-foreground">
@@ -283,12 +283,12 @@ export function ResolutionReviewClient({
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6 items-start">
-                <div className="bg-slate-200 dark:bg-slate-800 rounded-lg p-6 overflow-auto">
+            <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6 items-start print:block">
+                <div className="bg-slate-200 dark:bg-slate-800 rounded-lg p-6 overflow-auto print:bg-white print:p-0 print:m-0 print:overflow-visible print:w-full">
                     <LivePreview data={initialData} orgSettings={orgSettings} />
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 print:hidden">
                     {/* Digital Signature Management */}
                     {(canManage || isFinal) && (
                         <Card className="border-indigo-100 bg-indigo-50/30 dark:border-indigo-900/50 dark:bg-indigo-900/10">

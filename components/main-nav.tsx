@@ -16,7 +16,7 @@ export function MainNav({ role }: MainNavProps) {
     const pathname = usePathname()
 
     return (
-        <header className="border-b bg-white dark:bg-slate-950 dark:border-slate-800">
+        <header className="border-b bg-white dark:bg-slate-950 dark:border-slate-800 print:hidden">
             <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                     <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg">
