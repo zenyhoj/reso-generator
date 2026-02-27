@@ -17,7 +17,9 @@ export default async function NewResolutionPage() {
         .eq('id', user.id)
         .maybeSingle()
 
-    if (!profile || profile.role === 'bod_member') {
+    const canCreate = profile?.status === 'approved' && (profile.role === 'admin' || profile.role === 'bod_secretary')
+
+    if (!canCreate) {
         redirect('/dashboard')
     }
 

@@ -1,5 +1,5 @@
 
-// @ts-ignore: Deno module imports
+// @ts-expect-error: Deno URL import is resolved at runtime in Supabase Edge Functions
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0"
 
 // ─── Security: Restrict CORS to your actual deployment origin ───────────────
@@ -14,6 +14,21 @@ const corsHeaders = {
 // ─── Input sanitisation constants ────────────────────────────────────────────
 const MAX_PROMPT_LENGTH = 1000
 const MAX_CONTEXT_LENGTH = 500
+
+interface GenerateResolutionRequestBody {
+    prompt?: unknown
+    context?: unknown
+}
+
+interface GeminiResponse {
+    candidates?: Array<{
+        content?: {
+            parts?: Array<{
+                text?: string
+            }>
+        }
+    }>
+}
 
 function sanitizeInput(input: string, maxLength: number): string {
     return String(input)
@@ -61,10 +76,10 @@ Deno.serve(async (req: Request) => {
         }
 
         // 3. Parse Request Body
-        let requestData
+        let requestData: GenerateResolutionRequestBody
         try {
-            requestData = await req.json() as any
-        } catch (e) {
+            requestData = await req.json() as GenerateResolutionRequestBody
+        } catch {
             throw new Error("Invalid request body. Expected JSON.")
         }
 
@@ -120,13 +135,13 @@ Deno.serve(async (req: Request) => {
         );
 
         if (!response.ok) {
-            const errorData = await response.json() as any;
+            const errorData: unknown = await response.json();
             // Log full details server-side, return safe message to client
             console.error("Gemini API Error:", JSON.stringify(errorData));
             throw new Error(`Gemini API request failed (${response.status})`);
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as GeminiResponse;
         // Debug logging only enabled in dev — never log raw AI output in production
         if (Deno.env.get('DEBUG') === 'true') {
             console.log("Gemini Raw Response:", JSON.stringify(data));
@@ -144,7 +159,7 @@ Deno.serve(async (req: Request) => {
             // Remove any potential markdown code blocks
             const cleanContent = responseContent.replace(/```json/g, '').replace(/```/g, '').trim();
             parsedResponse = JSON.parse(cleanContent)
-        } catch (e) {
+        } catch {
             // Log raw content server-side only
             console.error("Failed to parse JSON from AI response")
             throw new Error("AI generated invalid JSON. Please try again.")
@@ -156,7 +171,7 @@ Deno.serve(async (req: Request) => {
             status: 200,
         })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Log the full error server-side, never expose details to the client
         console.error("Edge Function Error:", error)
         return new Response(JSON.stringify({ error: "Internal Server Error" }), {

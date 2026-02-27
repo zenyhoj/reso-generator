@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createClient } from "@/utils/supabase/client"
 import { ResolutionFormValues } from "@/types/schema"
@@ -17,6 +18,9 @@ interface ResolutionReviewClientProps {
     resolutionStatus: string
     isOwner: boolean
     canManage: boolean
+    canFinalize: boolean
+    finalizedAt?: string | null
+    finalizedByName?: string | null
     initialData: ResolutionFormValues
     orgSettings?: {
         water_district_name?: string
@@ -44,15 +48,23 @@ function proposalKey(section: "whereas" | "resolved", index: number) {
     return `${section}-${index}`
 }
 
+function getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Unknown error"
+}
+
 export function ResolutionReviewClient({
     resolutionId,
     resolutionStatus,
     isOwner,
     canManage,
+    canFinalize,
+    finalizedAt,
+    finalizedByName,
     initialData,
     orgSettings,
     signedPdfUrl,
 }: ResolutionReviewClientProps) {
+    const router = useRouter()
     const [suggestions, setSuggestions] = useState<Record<string, string>>({})
     const [notes, setNotes] = useState<Record<string, string>>({})
     const [isSubmittingKey, setIsSubmittingKey] = useState<string | null>(null)
@@ -150,8 +162,8 @@ export function ResolutionReviewClient({
             setSuggestions((prev) => ({ ...prev, [key]: "" }))
             setNotes((prev) => ({ ...prev, [key]: "" }))
             toast.success("Suggestion submitted.")
-        } catch (error: any) {
-            toast.error(error.message || "Failed to submit suggestion.")
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error) || "Failed to submit suggestion.")
         } finally {
             setIsSubmittingKey(null)
         }
@@ -172,8 +184,8 @@ export function ResolutionReviewClient({
                 prev.map((p) => (p.id === proposalId ? { ...p, status: newStatus } : p))
             )
             toast.success(`Proposal ${newStatus}.`)
-        } catch (error: any) {
-            toast.error(error.message || "Failed to update proposal.")
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error) || "Failed to update proposal.")
         } finally {
             setActingId(null)
         }
@@ -192,8 +204,8 @@ export function ResolutionReviewClient({
 
             setProposals((prev) => prev.filter((p) => p.id !== proposalId))
             toast.success("Proposal retracted.")
-        } catch (error: any) {
-            toast.error(error.message || "Failed to retract proposal.")
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error) || "Failed to retract proposal.")
         } finally {
             setActingId(null)
         }
@@ -219,6 +231,10 @@ export function ResolutionReviewClient({
 
         try {
             const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                throw new Error("You must be logged in to finalize a resolution.")
+            }
             const fileExt = file.name.split('.').pop()
             const fileName = `${resolutionId}-${Date.now()}.${fileExt}`
             const filePath = `${fileName}`
@@ -235,16 +251,22 @@ export function ResolutionReviewClient({
 
             const { error: updateError } = await supabase
                 .from('resolutions')
-                .update({ signed_pdf_url: publicUrl })
+                .update({
+                    signed_pdf_url: publicUrl,
+                    status: "final",
+                    finalized_at: new Date().toISOString(),
+                    finalized_by: user.id,
+                })
                 .eq('id', resolutionId)
 
             if (updateError) throw updateError
 
             setCurrentSignedPdf(publicUrl)
-            toast.success("Signed resolution uploaded successfully!", { id: toastId })
-        } catch (error: any) {
+            toast.success("Signed resolution uploaded. Status set to final.", { id: toastId })
+            router.refresh()
+        } catch (error: unknown) {
             console.error("Upload failed", error)
-            toast.error(`Upload failed: ${error.message}`, { id: toastId })
+            toast.error(`Upload failed: ${getErrorMessage(error)}`, { id: toastId })
         } finally {
             setIsUploadingSignature(false)
         }
@@ -275,6 +297,18 @@ export function ResolutionReviewClient({
                             </Badge>
                         )}
                     </div>
+                    {isFinal && finalizedAt && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            Finalized on {new Date(finalizedAt).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                            })}
+                            {finalizedByName ? ` by ${finalizedByName}` : ''}
+                        </p>
+                    )}
                 </div>
                 <Link href="/dashboard">
                     <Button variant="outline" className="gap-2">
@@ -290,7 +324,7 @@ export function ResolutionReviewClient({
 
                 <div className="space-y-4 print:hidden">
                     {/* Digital Signature Management */}
-                    {(canManage || isFinal) && (
+                    {(canFinalize || isFinal) && (
                         <Card className="border-indigo-100 bg-indigo-50/30 dark:border-indigo-900/50 dark:bg-indigo-900/10">
                             <CardHeader className="pb-3">
                                 <div className="flex items-center gap-2">
@@ -313,7 +347,7 @@ export function ResolutionReviewClient({
                                                     View Signed PDF
                                                 </a>
                                             </Button>
-                                            {canManage && (
+                                            {canFinalize && (
                                                 <div className="relative">
                                                     <Button variant="ghost" size="sm" disabled={isUploadingSignature} className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
                                                         {isUploadingSignature ? <Loader2 className="w-4 h-4 animate-spin" /> : "Re-upload"}
@@ -336,7 +370,7 @@ export function ResolutionReviewClient({
                                                 No signed PDF uploaded yet.
                                             </span>
                                         </div>
-                                        {canManage && (
+                                        {canFinalize && (
                                             <div className="flex gap-2 w-full">
                                                 <Button variant="outline" onClick={() => window.print()} className="flex-1 gap-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50">
                                                     <Download className="w-4 h-4" /> 1. Download Unsigned PDF

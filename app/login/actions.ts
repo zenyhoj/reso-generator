@@ -85,39 +85,37 @@ export async function signup(prevState: any, formData: FormData) {
         // Helper to normalize names for comparison
         const normalize = (name: string) => name.toLowerCase().trim().replace(/\s+/g, ' ')
 
-        // Create roles based on position
-        let role = 'bod_member'
-        const posLower = bodPosition.toLowerCase()
-        if (posLower.includes('admin')) role = 'admin'
-        else if (posLower === 'bod secretary') role = 'bod_secretary'
+        // CRITICAL SECURITY FIX: 
+        // 1. Force all new signups to 'bod_member' role.
+        // 2. Initial admin must be set manually in DB.
+        const role = 'bod_member'
 
-        console.log('Signup DEBUG - Determined Role:', role)
+        console.log('Signup DEBUG - Enforced Role:', role)
 
         // --- VALIDATION: Check if fullName matches an official BOD name ---
-        if (role === 'bod_member') {
-            const { data: orgSettings } = await adminSupabase
-                .from('organization_settings')
-                .select('signatories')
-                .eq('id', 1)
-                .maybeSingle()
+        // This is now enforced for ALL signups to prevent unauthorized accounts.
+        const { data: orgSettings } = await adminSupabase
+            .from('organization_settings')
+            .select('signatories')
+            .eq('id', 1)
+            .maybeSingle()
 
-            if (!orgSettings || !orgSettings.signatories) {
-                console.error('SYSTEM ERROR: No organization settings or signatories found.')
-                return { error: 'System configuration error. Please contact the administrator.' }
-            }
+        if (!orgSettings || !orgSettings.signatories) {
+            console.error('SYSTEM ERROR: No organization settings or signatories found.')
+            return { error: 'System configuration error. Please contact the administrator.' }
+        }
 
-            const signatories = orgSettings.signatories as any[]
-            const officialNames = signatories
-                .map(s => s.name)
-                .filter(Boolean)
-                .map(n => normalize(n as string))
+        const signatories = orgSettings.signatories as any[]
+        const officialNames = signatories
+            .map(s => s.name)
+            .filter(Boolean)
+            .map(n => normalize(n as string))
 
-            console.log('Signup DEBUG - Official Names List:', officialNames)
+        console.log('Signup DEBUG - Official Names List:', officialNames)
 
-            if (!officialNames.includes(normalize(fullName))) {
-                console.log('Signup REJECTED: Name not in official signatories list.', fullName)
-                return { error: 'Your name is not listed in the official Board of Directors list. Please contact the administrator.' }
-            }
+        if (!officialNames.includes(normalize(fullName))) {
+            console.log('Signup REJECTED: Name not in official signatories list.', fullName)
+            return { error: 'Your name is not listed in the official Board of Directors list. Please contact the administrator.' }
         }
         // -----------------------------------------------------------------
 

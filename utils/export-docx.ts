@@ -1,5 +1,5 @@
 
-import { Document, Packer, Paragraph, TextRun, AlignmentType, SectionType, HeadingLevel, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, VerticalAlign } from "docx";
+import { Document, Packer, Paragraph, TextRun, AlignmentType, ImageRun, Table, TableRow, TableCell, WidthType, BorderStyle, VerticalAlign } from "docx";
 import { saveAs } from "file-saver";
 import { ResolutionFormValues } from "@/types/schema";
 
@@ -13,6 +13,8 @@ interface ExportOptions {
         water_district_contact?: string;
     };
 }
+
+type Signatory = ResolutionFormValues["signatories"][number];
 
 export async function exportToDocx({ data, orgSettings }: ExportOptions) {
     // 8.5 x 13 inches in Twips (1 inch = 1440 twips)
@@ -34,9 +36,8 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                     width: 80,
                     height: 80,
                 },
-                // @ts-ignore
                 type: "png",
-            });
+            } as ConstructorParameters<typeof ImageRun>[0]);
         } catch (e) {
             console.error("Failed to load logo for docx:", e);
         }
@@ -57,9 +58,8 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                             width: 120,
                             height: 60,
                         },
-                        // @ts-ignore
                         type: "png",
-                    });
+                    } as ConstructorParameters<typeof ImageRun>[0]);
                 } catch (e) {
                     console.error(`Failed to load signature for ${signer.name}:`, e);
                 }
@@ -214,7 +214,7 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                     }),
 
                     // WHEREAS Clauses
-                    ...data.whereasClauses.flatMap((clause, index) => {
+                    ...data.whereasClauses.flatMap((clause) => {
                         const cleanClause = clause.replace(/^(WHEREAS,?\s*)/i, "").trim();
                         return [
                             new Paragraph({
@@ -239,7 +239,7 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
                     }),
 
                     // RESOLVED Clauses
-                    ...data.resolvedClauses.flatMap((clause, index) => {
+                    ...data.resolvedClauses.flatMap((clause) => {
                         const cleanClause = clause.replace(/^(RESOLVED,?\s*(as it is hereby resolved,?)?\s*)/i, "").trim();
                         return [
                             new Paragraph({
@@ -308,7 +308,7 @@ export async function exportToDocx({ data, orgSettings }: ExportOptions) {
     saveAs(blob, `Resolution-${data.resolutionNumber || "Draft"}.docx`);
 }
 
-function createSignatoryRows(signatories: any[], signatureImages: Record<number, ImageRun>) {
+function createSignatoryRows(signatories: Signatory[], signatureImages: Record<number, ImageRun>) {
     const rows: TableRow[] = [];
 
     // Chairman Centered Row
@@ -317,7 +317,7 @@ function createSignatoryRows(signatories: any[], signatureImages: Record<number,
         const chairman = signatories[chairmanIndex];
         const chairmanName = chairman.role !== 'gm' && !chairman.name.toUpperCase().startsWith('DIR.') ? `DIR. ${chairman.name}` : chairman.name;
 
-        const cellChildren = [];
+        const cellChildren: Paragraph[] = [];
         if (signatureImages[chairmanIndex]) {
             cellChildren.push(new Paragraph({ children: [signatureImages[chairmanIndex]], alignment: AlignmentType.CENTER }));
         }
@@ -349,7 +349,7 @@ function createSignatoryRows(signatories: any[], signatureImages: Record<number,
         const leftItem = remainingIndices[i];
         const rightItem = remainingIndices[i + 1];
 
-        const leftChildren = [];
+        const leftChildren: Paragraph[] = [];
         if (signatureImages[leftItem.i]) {
             leftChildren.push(new Paragraph({ children: [signatureImages[leftItem.i]], alignment: AlignmentType.CENTER }));
         }
@@ -363,7 +363,7 @@ function createSignatoryRows(signatories: any[], signatureImages: Record<number,
             spacing: { before: signatureImages[leftItem.i] ? 0 : 200, after: 400 }
         }));
 
-        const rightChildren = [];
+        const rightChildren: Paragraph[] = [];
         if (rightItem) {
             if (signatureImages[rightItem.i]) {
                 rightChildren.push(new Paragraph({ children: [signatureImages[rightItem.i]], alignment: AlignmentType.CENTER }));
@@ -391,7 +391,7 @@ function createSignatoryRows(signatories: any[], signatureImages: Record<number,
     const gmIndex = signatories.findIndex(s => s.role === 'gm');
     if (gmIndex !== -1) {
         const gm = signatories[gmIndex];
-        const gmChildren = [
+        const gmChildren: Paragraph[] = [
             new Paragraph({
                 alignment: AlignmentType.CENTER,
                 children: [new TextRun({ text: "Concurred:", font: "Georgia" })],

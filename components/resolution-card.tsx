@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { FileText, Trash2, Loader2, AlertTriangle } from "lucide-react"
+import { FileText, Trash2, Loader2 } from "lucide-react"
 
 import {
     Card,
@@ -37,15 +37,24 @@ interface ResolutionCardProps {
         series_year: number
         title: string
         description?: string | null
-        content?: any
+        content?: {
+            resolvedClauses?: string[]
+            whereasClauses?: string[]
+        }
         created_at: string
+        finalized_at?: string | null
         status: string
     }
     role?: string
 }
 
 export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
-    const canDelete = role === 'admin' || role === 'bod_secretary'
+    const isFinal = resolution.status === 'final'
+    const canDelete = (role === 'admin' || role === 'bod_secretary') && !isFinal
+    const canEdit = (role === 'admin' || role === 'bod_secretary') && !isFinal
+    const resolutionHref = canEdit
+        ? `/resolutions/${resolution.id}`
+        : `/resolutions/${resolution.id}/view`
     const router = useRouter()
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteInput, setDeleteInput] = useState("")
@@ -83,9 +92,10 @@ export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
             toast.success("Resolution deleted", { id: toastId })
             setIsDialogOpen(false)
             router.refresh()
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Delete failed:", error)
-            toast.error(`Failed to delete: ${error.message}`, { id: toastId })
+            const message = error instanceof Error ? error.message : "Unknown error"
+            toast.error(`Failed to delete: ${message}`, { id: toastId })
         } finally {
             setIsDeleting(false)
         }
@@ -93,7 +103,7 @@ export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
 
     return (
         <Card className="hover:bg-accent/50 hover:shadow-md transition-all duration-200 group relative flex flex-col h-full border-slate-200 dark:border-slate-800">
-            <Link href={`/resolutions/${resolution.id}`} className="flex-1 flex flex-col">
+            <Link href={resolutionHref} className="flex-1 flex flex-col">
                 <CardHeader className="pb-3 flex-1">
                     <div className="flex flex-wrap items-center gap-2 mb-2 pr-8">
                         <span className="text-[11px] font-semibold text-slate-600 bg-slate-100/80 px-2 py-0.5 rounded-md dark:bg-slate-800 dark:text-slate-300">
@@ -125,6 +135,15 @@ export function ResolutionCard({ resolution, role }: ResolutionCardProps) {
                             day: 'numeric'
                         })}
                     </div>
+                    {isFinal && resolution.finalized_at && (
+                        <div className="mt-1 text-[11px] text-muted-foreground">
+                            Finalized {new Date(resolution.finalized_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                            })}
+                        </div>
+                    )}
                 </CardContent>
             </Link>
 

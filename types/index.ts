@@ -1,4 +1,16 @@
 
+export type JsonValue =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: JsonValue }
+    | JsonValue[]
+
+export interface ResolutionSignatory {
+    [key: string]: JsonValue
+}
+
 export interface Profile {
     id: string
     email: string
@@ -15,9 +27,9 @@ export interface Resolution {
     series_year: number
     title: string
     description?: string
-    content: any // JSONB
+    content: JsonValue // JSONB
     status: 'draft' | 'final' | 'archived'
-    signatories: any[]
+    signatories: ResolutionSignatory[]
     created_at: string
     updated_at: string
 }

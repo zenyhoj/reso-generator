@@ -16,11 +16,13 @@ export default async function EditResolutionPage({ params }: { params: Promise<{
     // Role guard: bod_member cannot edit — send to review view
     const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, status')
         .eq('id', user.id)
         .maybeSingle()
 
-    if (!profile || profile.role === 'bod_member') {
+    const canEdit = profile?.status === 'approved' && (profile.role === 'admin' || profile.role === 'bod_secretary')
+
+    if (!canEdit) {
         redirect(`/resolutions/${id}/view`)
     }
 
@@ -32,6 +34,10 @@ export default async function EditResolutionPage({ params }: { params: Promise<{
 
     if (error || !resolution) {
         notFound()
+    }
+
+    if (resolution.status === 'final') {
+        redirect(`/resolutions/${id}/view`)
     }
 
     // Map DB data to Form Values

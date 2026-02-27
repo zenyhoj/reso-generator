@@ -1,5 +1,5 @@
 -- Add signed_pdf_url to resolutions
-ALTER TABLE public.resolutions ADD COLUMN signed_pdf_url TEXT;
+ALTER TABLE public.resolutions ADD COLUMN IF NOT EXISTS signed_pdf_url TEXT;
 
 -- Create storage bucket for signed resolutions if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)

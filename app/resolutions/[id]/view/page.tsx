@@ -1,16 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient, createClient } from '@/utils/supabase/server'
 import { MainNav } from '@/components/main-nav'
 import { ResolutionReviewClient } from '@/components/resolution-review-client'
 import { ResolutionFormValues } from '@/types/schema'
 
-function normalizeName(value?: string | null) {
-    return (value || '').trim().toLowerCase()
-}
-
 export default async function ViewResolutionPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const supabase = await createClient()
+    const adminSupabase = process.env.NEXT_SERVICE_ROLE_KEY ? await createAdminClient() : null
     const {
         data: { user },
     } = await supabase.auth.getUser()
@@ -26,10 +23,10 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
     ] = await Promise.all([
         supabase
             .from('profiles')
-            .select('id, role, full_name')
+            .select('id, role, status, full_name')
             .eq('id', user.id)
             .maybeSingle(),
-        supabase.from('resolutions').select('*').eq('id', id).single(),
+        (adminSupabase ?? supabase).from('resolutions').select('*').eq('id', id).single(),
         supabase.from('organization_settings').select('*').eq('id', 1).maybeSingle()
     ])
 
@@ -40,13 +37,12 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
     const isOwner = resolution.user_id === user.id
     const isAdmin = currentProfile?.role === 'admin'
     const isSecretary = currentProfile?.role === 'bod_secretary'
-    const canManage = isOwner || isAdmin || isSecretary
+    const isApproved = currentProfile?.status === 'approved'
+    const canManage = isApproved && (isOwner || isAdmin || isSecretary)
+    const canFinalize = isApproved && (isAdmin || isSecretary)
+    const canReview = isApproved
 
-    let isOfficerReviewer = false
-    let ownerOrgSettings: any = {}
-
-    // Use organization settings for district info
-    ownerOrgSettings = {
+    const ownerOrgSettings = {
         water_district_name: orgSettings?.water_district_name || undefined,
         address: orgSettings?.address || undefined,
         logo_url: orgSettings?.logo_url || undefined,
@@ -54,28 +50,18 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
         water_district_contact: orgSettings?.water_district_contact || undefined,
     }
 
-    if (!isOwner) {
-        const { data: ownerProfile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', resolution.user_id)
-            .maybeSingle()
-
-        const isSameDistrict = true // district checks handled via organization_settings singleton
-
-        const reviewerName = normalizeName(currentProfile?.full_name)
-
-        // Get official names from organization settings signatories
-        const signatories = (orgSettings?.signatories as any[]) || []
-        const officerNames = signatories
-            .map(s => normalizeName(s.name))
-            .filter(Boolean)
-
-        isOfficerReviewer = isSameDistrict && Boolean(reviewerName) && officerNames.includes(reviewerName)
+    if (!canReview) {
+        redirect('/pending')
     }
 
-    if (!canManage && !isOfficerReviewer) {
-        redirect('/dashboard')
+    let finalizedByName: string | null = null
+    if (resolution.finalized_by) {
+        const { data: finalizerProfile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', resolution.finalized_by)
+            .maybeSingle()
+        finalizedByName = finalizerProfile?.full_name ?? null
     }
 
     const initialData: ResolutionFormValues = {
@@ -106,6 +92,9 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
                     resolutionStatus={resolution.status}
                     isOwner={isOwner}
                     canManage={canManage}
+                    canFinalize={canFinalize}
+                    finalizedAt={resolution.finalized_at}
+                    finalizedByName={finalizedByName}
                     initialData={initialData}
                     orgSettings={ownerOrgSettings}
                     signedPdfUrl={resolution.signed_pdf_url}

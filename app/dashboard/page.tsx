@@ -1,5 +1,5 @@
 
-import { createClient } from '@/utils/supabase/server'
+import { createAdminClient, createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -8,8 +8,24 @@ import { Plus, FileText } from 'lucide-react'
 import { MainNav } from '@/components/main-nav'
 import { SearchInput } from '@/components/search-input'
 
+interface DashboardResolution {
+    id: string
+    resolution_number: string
+    series_year: number
+    title: string
+    description?: string | null
+    content?: {
+        resolvedClauses?: string[]
+        whereasClauses?: string[]
+    }
+    created_at: string
+    finalized_at?: string | null
+    status: string
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ query?: string }> }) {
     const supabase = await createClient()
+    const adminSupabase = process.env.NEXT_SERVICE_ROLE_KEY ? await createAdminClient() : null
     const { query } = await searchParams
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -25,11 +41,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         .eq('id', user.id)
         .maybeSingle()
 
+    if (!profile || profile.status !== 'approved') {
+        redirect('/pending')
+    }
+
     const role = profile?.role ?? 'bod_member'
     const canCreate = role === 'admin' || role === 'bod_secretary'
 
     // Fetch resolutions
-    let queryBuilder = supabase
+    let queryBuilder = (adminSupabase ?? supabase)
         .from('resolutions')
         .select('*')
         .order('created_at', { ascending: false })
@@ -64,7 +84,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {resolutions && resolutions.length > 0 ? (
-                        resolutions.map((res: any) => (
+                        resolutions.map((res: DashboardResolution) => (
                             <ResolutionCard key={res.id} resolution={res} role={role} />
                         ))
                     ) : (
