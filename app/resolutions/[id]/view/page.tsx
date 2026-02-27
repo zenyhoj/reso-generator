@@ -85,7 +85,7 @@ export default async function ViewResolutionPage({ params }: { params: Promise<{
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-            <MainNav role={currentProfile?.role} />
+            <MainNav role={currentProfile?.role} userEmail={user.email} />
             <div className="container mx-auto py-8 px-4">
                 <ResolutionReviewClient
                     resolutionId={resolution.id}

@@ -62,7 +62,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-            <MainNav role={role} />
+            <MainNav role={role} userEmail={user.email} />
             <div className="container mx-auto py-10 px-4">
                 <div className="flex justify-between items-center mb-8">
                     <div>

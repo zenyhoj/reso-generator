@@ -266,7 +266,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
-            <MainNav />
+            <MainNav userEmail={user?.email ?? null} />
             <div className="max-w-5xl mx-auto py-8 px-4">
                 <div className="flex items-center justify-between mb-8">
                     <div>

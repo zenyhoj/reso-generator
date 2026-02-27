@@ -26,7 +26,7 @@ export default async function AdminPage() {
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-            <MainNav role="admin" />
+            <MainNav role="admin" userEmail={user.email} />
             <div className="container mx-auto py-10 px-4">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">

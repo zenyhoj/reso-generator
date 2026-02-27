@@ -10,9 +10,10 @@ import { signout } from "@/app/login/actions"
 
 interface MainNavProps {
     role?: string
+    userEmail?: string | null
 }
 
-export function MainNav({ role }: MainNavProps) {
+export function MainNav({ role, userEmail }: MainNavProps) {
     const pathname = usePathname()
 
     return (
@@ -52,12 +53,17 @@ export function MainNav({ role }: MainNavProps) {
                     </nav>
                 </div>
 
-                <form>
-                    <Button formAction={signout} variant="ghost" size="sm" className="text-muted-foreground gap-2">
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                    </Button>
-                </form>
+                <div className="flex flex-col items-end">
+                    <form>
+                        <Button formAction={signout} variant="ghost" size="sm" className="text-muted-foreground gap-2">
+                            <LogOut className="w-4 h-4" />
+                            Sign Out
+                        </Button>
+                    </form>
+                    {userEmail && (
+                        <p className="text-xs text-muted-foreground mt-1">{userEmail}</p>
+                    )}
+                </div>
             </div>
         </header>
     )
